@@ -8,7 +8,7 @@ export const empanadas: Empanada[] = [
     nom: 'Bœuf épicé',
     description: 'Bœuf mijoté, oignons, poivrons, olives, cumin.',
     prix: 4.50,
-    image: '/images/boeuf-epice.jpg',
+    image: 'https://placehold.co/600x400',
     categorie: 'sale',
   },
   {
@@ -16,7 +16,7 @@ export const empanadas: Empanada[] = [
     nom: 'Poulet crémeux',
     description: 'Poulet, oignons, poivrons, crème légère, épices douces.',
     prix: 4.50,
-    image: '/images/poulet-cremeux.jpg',
+    image: 'https://placehold.co/600x400',
     categorie: 'sale',
   },
   {
@@ -24,7 +24,7 @@ export const empanadas: Empanada[] = [
     nom: 'Épinards & fromage',
     description: 'Épinards frais, oignons, mozzarella, œuf.',
     prix: 4.20,
-    image: '/images/epinards-fromage.jpg',
+    image: 'https://placehold.co/600x400',
     categorie: 'sale',
   },
   {
@@ -32,7 +32,7 @@ export const empanadas: Empanada[] = [
     nom: 'Jambon & fromage',
     description: 'Jambon cuit, mozzarella fondante, origan.',
     prix: 4.20,
-    image: '/images/jambon-fromage.jpg',
+    image: 'https://placehold.co/600x400',
     categorie: 'sale',
   },
   {
@@ -40,7 +40,7 @@ export const empanadas: Empanada[] = [
     nom: 'Légumes du soleil',
     description: 'Courgettes, poivrons, oignons, maïs, tomates, herbes.',
     prix: 4.20,
-    image: '/images/legumes-soleil.jpg',
+    image: 'https://placehold.co/600x400',
     categorie: 'sale',
   },
   {
@@ -48,7 +48,7 @@ export const empanadas: Empanada[] = [
     nom: 'Dulce de leche',
     description: 'Confiture de lait onctueuse, touche de vanille.',
     prix: 3.50,
-    image: '/images/dulce-de-leche.jpg',
+    image: 'https://placehold.co/600x400',
     categorie: 'sucre',
   },
 ];

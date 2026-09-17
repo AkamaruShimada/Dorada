@@ -40,6 +40,13 @@ export interface Extra {
  * Utile plus tard pour la logique de commande
  */
 export interface ItemPanier {
-  empanada: Empanada;
+  empanadaId: number;
+  quantite: number;
+}
+
+export interface LigneCommande {
+  empanadaId: number;
+  nomAuMomentAchat: string;
+  prixAuMomentAchat: number;
   quantite: number;
 }

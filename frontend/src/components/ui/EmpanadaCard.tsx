@@ -7,7 +7,7 @@ interface EmpanadaCardProps {
 
 export default function EmpanadaCard({ empanada }: EmpanadaCardProps) {
   return (
-    <div className="bg-white rounded-lg p-4">
+    <div className="bg-surface rounded-lg p-4">
       <img src={empanada.image} alt={empanada.nom} className="w-full h-40 object-cover rounded" />
       <h3 className="font-bold text-lg mt-2">{empanada.nom}</h3>
       <p className="text-sm text-gray-600">{empanada.description}</p>

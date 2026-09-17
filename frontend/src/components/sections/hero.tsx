@@ -3,7 +3,7 @@
 function Hero() {
   return (
     <section className="bg-surface px-6 py-16 md:py-24">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-10">
 
         {/* Bloc texte */}
         <div className="flex-1 text-center md:text-left">
