@@ -52,7 +52,6 @@ model Empanada {
   actif       Boolean       @default(true)
 
   commandeEmpanadas CommandeEmpanada[]
-  formuleEmpanadas  FormuleEmpanada[]
 
   @@map("empanadas")
 }
@@ -67,7 +66,6 @@ model Extra {
   actif       Boolean  @default(true)
 
   commandeExtras CommandeExtra[]
-  formuleExtras  FormuleExtra[]
 
   @@map("extras")
 }
@@ -79,36 +77,37 @@ model Formule {
   prix        Decimal
   actif       Boolean  @default(true)
 
-  empanadas       FormuleEmpanada[]
-  extras          FormuleExtra[]
+  nombreEmpanadas   Int      // ex: 2, 3, 6, 12 — quota que le client doit remplir
+  nombreExtras      Int      @default(0) // ex: 1 boisson + 1 douceur = 2, ou 1 seul
+
   commandeFormules CommandeFormule[]
 
   @@map("formules")
 }
 
-// Table de jonction : quelles empanadas composent une formule, et en quelle quantité
-model FormuleEmpanada {
-  id         Int      @id @default(autoincrement())
-  formule    Formule  @relation(fields: [formuleId], references: [id])
-  formuleId  Int
-  empanada   Empanada @relation(fields: [empanadaId], references: [id])
-  empanadaId Int
-  quantite   Int
+/// Table pour définir les restrictions dans les formules
 
-  @@map("formule_empanadas")
-}
+//model FormuleEmpanada {
+//  id         Int      @id @default(autoincrement())
+//  formule    Formule  @relation(fields: [formuleId], references: [id])
+//  formuleId  Int
+//  empanada   Empanada @relation(fields: [empanadaId], references: [id])
+//  empanadaId Int
+//  quantite   Int
 
-// Table de jonction : quels extras composent une formule, et en quelle quantité
-model FormuleExtra {
-  id        Int     @id @default(autoincrement())
-  formule   Formule @relation(fields: [formuleId], references: [id])
-  formuleId Int
-  extra     Extra   @relation(fields: [extraId], references: [id])
-  extraId   Int
-  quantite  Int
+//  @@map("formule_empanadas")
+//}
 
-  @@map("formule_extras")
-}
+//model FormuleExtra {
+//  id        Int     @id @default(autoincrement())
+//  formule   Formule @relation(fields: [formuleId], references: [id])
+//  formuleId Int
+//  extra     Extra   @relation(fields: [extraId], references: [id])
+//  extraId   Int
+//  quantite  Int
+
+//  @@map("formule_extras")
+//}
 
 model Utilisateur {
   id           Int             @id @default(autoincrement())
@@ -148,7 +147,10 @@ model CommandeEmpanada {
   empanada      Empanada @relation(fields: [empanadaId], references: [id])
   empanadaId    Int
   quantite      Int
-  prixUnitaire  Decimal  // prix figé au moment de la commande
+  prixUnitaire  Decimal?  // prix figé au moment de la commande
+
+  commandeFormule CommandeFormule? @relation(fields: [commandeFormuleId], references: [id])
+  commandeFormuleId Int?
 
   @@map("commande_empanadas")
 }
@@ -162,6 +164,9 @@ model CommandeExtra {
   quantite      Int
   prixUnitaire  Decimal?
 
+  commandeFormule    CommandeFormule? @relation(fields: [commandeFormuleId], references: [id])
+  commandeFormuleId  Int?
+
   @@map("commande_extras")
 }
 
@@ -174,6 +179,9 @@ model CommandeFormule {
   formuleId     Int
   quantite      Int
   prixUnitaire  Decimal  // prix de la formule figé au moment de la commande
+
+  empanadasChoisies CommandeEmpanada[] // les empanadas de CETTE formule commandée
+  extrasChoisis     CommandeExtra[]
 
   @@map("commande_formules")
 }
