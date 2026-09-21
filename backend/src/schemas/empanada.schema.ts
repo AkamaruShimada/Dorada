@@ -1,3 +1,5 @@
+// backend/src/schemas/empanada.schema.ts
+
 import { z } from 'zod';
 
 export const createEmpanadaSchema = z.object({
@@ -5,9 +7,9 @@ export const createEmpanadaSchema = z.object({
   description: z.string().min(5, 'La description est trop courte'),
   prix: z.number().positive('Le prix doit être positif'),
   type: z.enum(['SALEE', 'SUCREE', 'VEGETARIEN']),
-  sansGluten: z.boolean().optional().default(false),
-  stock: z.number().int().nonnegative().optional().default(0),
-  actif: z.boolean().optional().default(true),
+  sansGluten: z.boolean().default(false),
+  stock: z.number().int().nonnegative().default(0),
+  actif: z.boolean().default(true),
 });
 
 // Pour la mise à jour : tous les champs optionnels

@@ -4,13 +4,9 @@ import prisma from '../prisma/client';
 import { CreateEmpanadaInput, UpdateEmpanadaInput } from '../schemas/empanada.schema';
 
 
-/**
- * Récupère toutes les empanadas actives
- * On ne montre pas celles désactivées (actif: false) par défaut
- */
-export const getAllEmpanadas = async () => {
+export const getAllEmpanadas = async (includeInactive: boolean = false) => {
   return prisma.empanada.findMany({
-    where: { actif: true },
+    where: includeInactive ? {} : { actif: true },
     orderBy: { nom: 'asc' },
   });
 };

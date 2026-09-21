@@ -14,13 +14,23 @@ const serializeEmpanada = (empanada: any) => ({
 
 export const getAllEmpanadas = async (req: Request, res: Response) => {
   try {
-    const empanadas = await empanadaService.getAllEmpanadas();
+    const empanadas = await empanadaService.getAllEmpanadas(false);
     res.status(200).json(empanadas.map(serializeEmpanada));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
+
+export const getAllEmpanadasAdmin = async (req: Request, res: Response) => {
+  try {
+    const empanadas = await empanadaService.getAllEmpanadas(true);
+    res.status(200).json(empanadas.map(serializeEmpanada));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+}
 
 export const getEmpanadaById = async (req: Request, res: Response) => {
   try {

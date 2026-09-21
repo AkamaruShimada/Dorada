@@ -8,6 +8,8 @@ import { createExtraSchema, updateExtraSchema } from '../schemas/extra.schema';
 const router = Router();
 
 router.get('/', extraController.getAllExtras);
+router.get('/admin', extraController.getAllExtrasAdmin);
+
 router.get('/:id', extraController.getExtraById);
 router.post('/', validate(createExtraSchema), extraController.createExtra);
 router.put('/:id', validate(updateExtraSchema), extraController.updateExtra);

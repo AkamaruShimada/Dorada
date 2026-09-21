@@ -1,3 +1,5 @@
+// backend/src/schemas/extra.schema.ts
+
 import { z } from 'zod';
 
 export const createExtraSchema = z.object({
@@ -5,8 +7,8 @@ export const createExtraSchema = z.object({
   description: z.string().min(5, 'La description est trop courte'),
   prix: z.number().positive('Le prix doit être positif'),
   type: z.enum(['DOUCEUR', 'BOISSON']),
-  stock: z.number().int().nonnegative().optional().default(0),
-  actif: z.boolean().optional().default(true),
+  stock: z.number().int().nonnegative().default(0),
+  actif: z.boolean().default(true),
 });
 
 // Pour la mise à jour : tous les champs optionnels

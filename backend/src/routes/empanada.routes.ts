@@ -8,6 +8,8 @@ import { createEmpanadaSchema, updateEmpanadaSchema } from '../schemas/empanada.
 const router = Router();
 
 router.get('/', empanadaController.getAllEmpanadas);
+router.get('/admin', empanadaController.getAllEmpanadasAdmin);
+
 router.get('/:id', empanadaController.getEmpanadaById);
 router.post('/', validate(createEmpanadaSchema), empanadaController.createEmpanada);
 router.put('/:id', validate(updateEmpanadaSchema), empanadaController.updateEmpanada);

@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import empanadaRoutes from './routes/empanada.routes';
 import extraRoutes from './routes/extra.routes';
+import formuleRoutes from './routes/formule.routes';
 
 // Charge les variables du fichier .env dans process.env
 dotenv.config();
@@ -24,6 +25,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/empanadas', empanadaRoutes);
 // Utilise les routes d'extras
 app.use('/api/extras', extraRoutes);
+// Utilise les routes de formule
+app.use('/api/formules', formuleRoutes);
 
 const PORT = process.env.PORT || 3000;
 

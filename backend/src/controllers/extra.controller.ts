@@ -14,7 +14,17 @@ const serializeExtra = (extra: any) => ({
 
 export const getAllExtras = async (req: Request, res: Response) => {
   try {
-    const extras = await extraService.getAllExtras();
+    const extras = await extraService.getAllExtras(false);
+    res.status(200).json(extras.map(serializeExtra));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+export const getAllExtrasAdmin = async (req: Request, res: Response) => {
+  try {
+    const extras = await extraService.getAllExtras(true);
     res.status(200).json(extras.map(serializeExtra));
   } catch (error) {
     console.error(error);
