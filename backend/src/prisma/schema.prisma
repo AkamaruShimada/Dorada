@@ -120,6 +120,20 @@ model Utilisateur {
   @@map("utilisateurs")
 }
 
+model Client {
+  id              Int       @id @default(autoincrement())
+  nom             String
+  email           String    @unique
+  motDePasse      String
+  telephone       String?
+  pointsFidelite  Int       @default(0)
+  creeLe          DateTime  @default(now())
+
+  commandes Commande[]
+
+  @@map("clients")
+}
+
 model Commande {
   id                Int              @id @default(autoincrement())
   reference         String           @unique
@@ -131,6 +145,9 @@ model Commande {
   adresseLivraison  String?          // rempli seulement si LIVRAISON
   dateSouhaitee     DateTime
   creeLe            DateTime         @default(now())
+
+  client            Client?          @relation(fields: [clientId], references: [id])
+  clientId          Int?
 
   empanadas CommandeEmpanada[]
   extras    CommandeExtra[]
