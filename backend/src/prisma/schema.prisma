@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TypeEmpanada {
+  SALEE
+  SUCREE
+  VEGETARIEN
+}
+
+enum TypeExtra {
+  DOUCEUR
+  BOISSON
+}
+
+enum StatutCommande {
+  EN_ATTENTE
+  VALIDEE
+  RECUPEREE
+  ANNULEE
+}
+
+enum ModeRecuperation {
+  RETRAIT
+  LIVRAISON
+}
+
+enum RoleUtilisateur {
+  ADMIN
+  EMPLOYE
+}
+
+model Empanada {
+  id          Int           @id @default(autoincrement())
+  nom         String
+  description String
+  prix        Decimal
+  type        TypeEmpanada
+  sansGluten  Boolean       @default(false)
+  stock       Int           @default(0)
+  actif       Boolean       @default(true)
+
+  commandeEmpanadas CommandeEmpanada[]
+  formuleEmpanadas  FormuleEmpanada[]
+
+  @@map("empanadas")
+}
+
+model Extra {
+  id          Int      @id @default(autoincrement())
+  nom         String
+  description String
+  type        TypeExtra
+  prix        Decimal
+  stock       Int          @default(0)
+  actif       Boolean  @default(true)
+
+  commandeExtras CommandeExtra[]
+  formuleExtras  FormuleExtra[]
+
+  @@map("extras")
+}
+
+model Formule {
+  id          Int      @id @default(autoincrement())
+  nom         String
+  description String
+  prix        Decimal
+  actif       Boolean  @default(true)
+
+  empanadas       FormuleEmpanada[]
+  extras          FormuleExtra[]
+  commandeFormules CommandeFormule[]
+
+  @@map("formules")
+}
+
+// Table de jonction : quelles empanadas composent une formule, et en quelle quantité
+model FormuleEmpanada {
+  id         Int      @id @default(autoincrement())
+  formule    Formule  @relation(fields: [formuleId], references: [id])
+  formuleId  Int
+  empanada   Empanada @relation(fields: [empanadaId], references: [id])
+  empanadaId Int
+  quantite   Int
+
+  @@map("formule_empanadas")
+}
+
+// Table de jonction : quels extras composent une formule, et en quelle quantité
+model FormuleExtra {
+  id        Int     @id @default(autoincrement())
+  formule   Formule @relation(fields: [formuleId], references: [id])
+  formuleId Int
+  extra     Extra   @relation(fields: [extraId], references: [id])
+  extraId   Int
+  quantite  Int
+
+  @@map("formule_extras")
+}
+
+model Utilisateur {
+  id           Int             @id @default(autoincrement())
+  nom          String
+  email        String          @unique
+  motDePasse   String
+  role         RoleUtilisateur @default(EMPLOYE)
+  creeLe       DateTime        @default(now())
+
+  @@map("utilisateurs")
+}
+
+model Commande {
+  id                Int              @id @default(autoincrement())
+  reference         String           @unique
+  clientNom         String
+  clientEmail       String
+  clientTelephone   String
+  statut            StatutCommande   @default(EN_ATTENTE)
+  modeRecuperation  ModeRecuperation
+  adresseLivraison  String?          // rempli seulement si LIVRAISON
+  dateSouhaitee     DateTime
+  creeLe            DateTime         @default(now())
+
+  empanadas CommandeEmpanada[]
+  extras    CommandeExtra[]
+  formules  CommandeFormule[]
+
+  @@map("commandes")
+}
+
+// Chaque ligne = une empanada commandée à l'unité (hors formule)
+model CommandeEmpanada {
+  id            Int      @id @default(autoincrement())
+  commande      Commande @relation(fields: [commandeId], references: [id])
+  commandeId    Int
+  empanada      Empanada @relation(fields: [empanadaId], references: [id])
+  empanadaId    Int
+  quantite      Int
+  prixUnitaire  Decimal  // prix figé au moment de la commande
+
+  @@map("commande_empanadas")
+}
+
+model CommandeExtra {
+  id            Int      @id @default(autoincrement())
+  commande      Commande @relation(fields: [commandeId], references: [id])
+  commandeId    Int
+  extra         Extra    @relation(fields: [extraId], references: [id])
+  extraId       Int
+  quantite      Int
+  prixUnitaire  Decimal?
+
+  @@map("commande_extras")
+}
+
+// Chaque ligne = une formule commandée
+model CommandeFormule {
+  id            Int      @id @default(autoincrement())
+  commande      Commande @relation(fields: [commandeId], references: [id])
+  commandeId    Int
+  formule       Formule  @relation(fields: [formuleId], references: [id])
+  formuleId     Int
+  quantite      Int
+  prixUnitaire  Decimal  // prix de la formule figé au moment de la commande
+
+  @@map("commande_formules")
+}
