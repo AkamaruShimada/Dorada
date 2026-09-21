@@ -4,3 +4,4 @@ dist/
 .env
 .env.local
 /src/generated/prisma
+scripts/createAdmin.ts

@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import empanadaRoutes from './routes/empanada.routes';
 import extraRoutes from './routes/extra.routes';
 import formuleRoutes from './routes/formule.routes';
+import authRoutes from './routes/auth.routes';
 
 // Charge les variables du fichier .env dans process.env
 dotenv.config();
@@ -27,6 +28,9 @@ app.use('/api/empanadas', empanadaRoutes);
 app.use('/api/extras', extraRoutes);
 // Utilise les routes de formule
 app.use('/api/formules', formuleRoutes);
+
+// Utilise l'authentification et la gestion des utilisateurs
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 3000;
 
