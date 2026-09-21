@@ -7,6 +7,7 @@ export const createEmpanadaSchema = z.object({
   type: z.enum(['SALEE', 'SUCREE', 'VEGETARIEN']),
   sansGluten: z.boolean().optional().default(false),
   stock: z.number().int().nonnegative().optional().default(0),
+  actif: z.boolean().optional().default(true),
 });
 
 // Pour la mise à jour : tous les champs optionnels

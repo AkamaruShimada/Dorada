@@ -6,6 +6,7 @@ export const createExtraSchema = z.object({
   prix: z.number().positive('Le prix doit être positif'),
   type: z.enum(['DOUCEUR', 'BOISSON']),
   stock: z.number().int().nonnegative().optional().default(0),
+  actif: z.boolean().optional().default(true),
 });
 
 // Pour la mise à jour : tous les champs optionnels
