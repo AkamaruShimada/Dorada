@@ -9,7 +9,7 @@ function Header() {
 
         {/* Logo */}
         <a href="/" className="font-bold text-xl">
-          Dorada
+          <img src="/images/dorada_logo.png" alt="Logo" className="h-30 w-auto" />
         </a>
 
         {/* Navigation desktop */}

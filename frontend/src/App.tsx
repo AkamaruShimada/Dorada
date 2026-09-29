@@ -1,38 +1,32 @@
-import Header from "./components/layout/header"
-import Hero from "./components/sections/hero"
-import MenuEmpanadas from "./components/sections/MenuEmpanada"
+// frontend/src/App.tsx
 
-import { useEffect, useState } from 'react';
-import { checkHealth } from './services/api';
-
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage.tsx';
+import LoginPage from './pages/LoginPage.tsx';
+import AdminPage from './pages/AdminPage.tsx';
+import { RedirectIfAuthenticated } from './components/auth/RedirectIfAuthenticated.tsx';
+import { ProtectedRoute } from './components/auth/ProtectedRoute.tsx';
 
 function App() {
-
-    // On type explicitement ici : soit le message reçu du backend, soit null au départ
-  const [statutBackend, setStatutBackend] = useState<string | null>(null);
-
-  useEffect(() => {
-    checkHealth()
-      .then((data) => setStatutBackend(data.message))
-      .catch((error) => setStatutBackend(`Erreur : ${error.message}`));
-  }, []);
-
   return (
-
-    <>
-     <Header/>
-     <Hero/>
-     <MenuEmpanadas/>
-
-         <div>
-      {/* Bloc de test temporaire, à retirer une fois la connexion validée */}
-      <p>Statut backend : {statutBackend ?? 'chargement...'}</p>
-
-      {/* votre contenu existant en dessous */}
-    </div>
-
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={
+          <RedirectIfAuthenticated>
+            <LoginPage />
+          </RedirectIfAuthenticated>
+          } 
+        />
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

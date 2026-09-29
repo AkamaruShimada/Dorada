@@ -33,26 +33,56 @@ export const registerUtilisateur = async (data: RegisterInput) => {
 };
 
 export const loginUtilisateur = async (data: LoginInput) => {
+  // 1. On cherche d'abord côté Utilisateur (employé/admin)
   const utilisateur = await prisma.utilisateur.findUnique({
     where: { email: data.email },
   });
 
-  if (!utilisateur) {
-    throw new Error('IDENTIFIANTS_INVALIDES');
+  if (utilisateur) {
+    const motDePasseValide = await bcrypt.compare(data.motDePasse, utilisateur.motDePasse);
+
+    if (!motDePasseValide) {
+      throw new Error('IDENTIFIANTS_INVALIDES');
+    }
+
+    const token = jwt.sign(
+      { id: utilisateur.id, role: utilisateur.role, typeCompte: 'UTILISATEUR' },
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRES_IN }
+    );
+
+    const { motDePasse, ...utilisateurSansMotDePasse } = utilisateur;
+    return {
+      token,
+      utilisateur: { ...utilisateurSansMotDePasse, typeCompte: 'UTILISATEUR' as const },
+    };
   }
 
-  const motDePasseValide = await bcrypt.compare(data.motDePasse, utilisateur.motDePasse);
+  // 2. Si aucun Utilisateur trouvé, on cherche côté Client
+  const client = await prisma.client.findUnique({
+    where: { email: data.email },
+  });
 
-  if (!motDePasseValide) {
-    throw new Error('IDENTIFIANTS_INVALIDES');
+  if (client) {
+    const motDePasseValide = await bcrypt.compare(data.motDePasse, client.motDePasse);
+
+    if (!motDePasseValide) {
+      throw new Error('IDENTIFIANTS_INVALIDES');
+    }
+
+    const token = jwt.sign(
+      { id: client.id, role: 'CLIENT', typeCompte: 'CLIENT' },
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRES_IN }
+    );
+
+    const { motDePasse, ...clientSansMotDePasse } = client;
+    return {
+      token,
+      utilisateur: { ...clientSansMotDePasse, role: 'CLIENT', typeCompte: 'CLIENT' as const },
+    };
   }
 
-  const token = jwt.sign(
-    { id: utilisateur.id, role: utilisateur.role },
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_EXPIRES_IN }
-  );
-
-  const { motDePasse, ...utilisateurSansMotDePasse } = utilisateur;
-  return { token, utilisateur: utilisateurSansMotDePasse };
+  // 3. Ni l'un ni l'autre
+  throw new Error('IDENTIFIANTS_INVALIDES');
 };
