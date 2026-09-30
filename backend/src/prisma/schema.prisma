@@ -47,6 +47,7 @@ model Empanada {
   description String
   prix        Decimal
   type        TypeEmpanada
+  image_url   String?       
   sansGluten  Boolean       @default(false)
   stock       Int           @default(0)
   actif       Boolean       @default(true)
@@ -61,6 +62,7 @@ model Extra {
   nom         String
   description String
   type        TypeExtra
+  image_url   String?
   prix        Decimal
   stock       Int          @default(0)
   actif       Boolean  @default(true)
@@ -75,6 +77,7 @@ model Formule {
   nom         String
   description String
   prix        Decimal
+  image_url   String?
   actif       Boolean  @default(true)
 
   nombreEmpanadas   Int      // ex: 2, 3, 6, 12 — quota que le client doit remplir

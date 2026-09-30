@@ -5,11 +5,11 @@ import { z } from 'zod';
 export const createEmpanadaSchema = z.object({
   nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
   description: z.string().min(5, 'La description est trop courte'),
-  prix: z.number().positive('Le prix doit être positif'),
+  prix: z.coerce.number().positive('Le prix doit être positif'),
   type: z.enum(['SALEE', 'SUCREE', 'VEGETARIEN']),
-  sansGluten: z.boolean().default(false),
-  stock: z.number().int().nonnegative().default(0),
-  actif: z.boolean().default(true),
+  sansGluten: z.coerce.boolean().default(false),
+  stock: z.coerce.number().int().nonnegative().default(0),
+  actif: z.coerce.boolean().default(true),
 });
 
 // Pour la mise à jour : tous les champs optionnels

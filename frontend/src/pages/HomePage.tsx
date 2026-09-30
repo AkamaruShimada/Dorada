@@ -1,7 +1,7 @@
 // frontend/src/pages/HomePage.tsx
 
-import Header from "../components/layout/header"
-import Hero from "../components/sections/hero"
+import Header from "../components/layout/Header"
+import Hero from "../components/sections/Hero"
 import MenuEmpanadas from "../components/sections/MenuEmpanada"
 
 function HomePage() {

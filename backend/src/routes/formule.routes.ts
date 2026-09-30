@@ -10,11 +10,11 @@ import { authenticate, isAdmin } from '../middlewares/auth.middleware';
 const router = Router();
 
 router.get("/", formuleController.getAllFormules);
-router.get("/admin", authenticate, isAdmin, formuleController.getAllFormulesAdmin);
+router.get("/admin", authenticate, formuleController.getAllFormulesAdmin);
 
 router.get("/:id", formuleController.getFormuleById);
-router.post("/", authenticate, isAdmin, validate(createFormuleSchema), formuleController.createFormule);
-router.put("/:id", authenticate, isAdmin, validate(updateFormuleSchema), formuleController.updateFormule);
-router.delete("/:id", authenticate, isAdmin, formuleController.deleteFormule);
+router.post("/admin", authenticate, isAdmin, validate(createFormuleSchema), formuleController.createFormule);
+router.put("/admin/:id", authenticate, isAdmin, validate(updateFormuleSchema), formuleController.updateFormule);
+router.delete("/admin/:id", authenticate, isAdmin, formuleController.deleteFormule);
 
 export default router;

@@ -1,16 +1,33 @@
 // src/components/sections/MenuEmpanadas.tsx
 
 import { useEffect, useState } from "react";
-import type { Empanada } from "../../types";
+import type { Empanada } from "../../types/admin.types";
 import { getEmpanadas } from "../../services/empanada.service";
 import EmpanadaCard from "../ui/EmpanadaCard";
 
 function MenuEmpanadas() {
   const [empanadas, setEmpanadas] = useState<Empanada[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getEmpanadas().then(setEmpanadas);
+    loadEmpanadas();
   }, []);
+
+  async function loadEmpanadas() {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getEmpanadas();
+      setEmpanadas(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (isLoading) return <p>Chargement des empanadas...</p>;
 
   return (
     <section className="bg-primary px-6 py-16 md:py-24">
@@ -24,6 +41,8 @@ function MenuEmpanadas() {
           ))}
         </div>
       </div>
+
+      {error && <p className="error-banner">{error}</p>}
     </section>
   );
 }

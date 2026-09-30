@@ -3,9 +3,15 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage.tsx';
 import LoginPage from './pages/LoginPage.tsx';
-import AdminPage from './pages/AdminPage.tsx';
 import { RedirectIfAuthenticated } from './components/auth/RedirectIfAuthenticated.tsx';
 import { ProtectedRoute } from './components/auth/ProtectedRoute.tsx';
+
+import AdminLayout from './components/layout/AdminLayout';
+import AdminDashboard  from './pages/admin/AdminDashboard';
+import AdminEmpanadas from './pages/admin/AdminEmpanadas';
+import AdminFormules from './pages/admin/AdminFormules';
+import AdminExtras from './pages/admin/AdminExtras';
+import AdminCommandes from './pages/admin/AdminCommandes';
 
 function App() {
   return (
@@ -18,12 +24,20 @@ function App() {
           </RedirectIfAuthenticated>
           } 
         />
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <AdminPage />
-          </ProtectedRoute>
-        }
-        />
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="empanadas" element={<AdminEmpanadas />} />
+          <Route path="formules" element={<AdminFormules />} />
+          <Route path="extras" element={<AdminExtras />} />
+          <Route path="commandes" element={<AdminCommandes />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

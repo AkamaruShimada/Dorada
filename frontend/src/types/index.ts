@@ -8,8 +8,9 @@ export interface Empanada {
   nom: string;
   description: string;
   prix: number;
-  image: string;
+  image_url: string;
   categorie: 'sale' | 'sucre'; // Union type : uniquement ces 2 valeurs possibles
+  sansGluten: boolean;
 }
 
 /**

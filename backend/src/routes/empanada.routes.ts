@@ -5,15 +5,16 @@ import * as empanadaController from '../controllers/empanada.controller';
 import { validate } from '../middlewares/validate.middleware';
 import { createEmpanadaSchema, updateEmpanadaSchema } from '../schemas/empanada.schema';
 import { authenticate, isAdmin } from '../middlewares/auth.middleware';
+import { upload } from '../middlewares/upload.middleware';
 
 const router = Router();
 
 router.get('/', empanadaController.getAllEmpanadas);
-router.get('/admin', authenticate, isAdmin, empanadaController.getAllEmpanadasAdmin);
+router.get('/admin', authenticate, empanadaController.getAllEmpanadasAdmin);
 
 router.get('/:id', empanadaController.getEmpanadaById);
-router.post('/', authenticate, isAdmin, validate(createEmpanadaSchema), empanadaController.createEmpanada);
-router.put('/:id', authenticate, isAdmin, validate(updateEmpanadaSchema), empanadaController.updateEmpanada);
-router.delete('/:id', authenticate, isAdmin, empanadaController.deleteEmpanada);
+router.post('/admin', authenticate, isAdmin, upload.single('image'), validate(createEmpanadaSchema), empanadaController.createEmpanada);
+router.put('/admin/:id', authenticate, isAdmin, upload.single('image'), validate(updateEmpanadaSchema), empanadaController.updateEmpanada);
+router.delete('/admin/:id', authenticate, isAdmin, empanadaController.deleteEmpanada);
 
 export default router;

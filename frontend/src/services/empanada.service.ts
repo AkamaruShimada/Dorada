@@ -1,10 +1,16 @@
-// src/services/empanadaService.ts
+// frontend/src/services/empanada.service.ts
 
-import { empanadas } from "../data/empanadas";
-import type { Empanada } from "../types";
+import type { Empanada } from '../types/admin.types';
 
-// Cette fonction fait semblant d'être asynchrone (comme un vrai appel API)
-// pour que le composant qui l'utilise soit déjà écrit "à la bonne forme"
+const API_URL = import.meta.env.VITE_API_URL;
+
 export async function getEmpanadas(): Promise<Empanada[]> {
-  return empanadas;
+  const response = await fetch(`${API_URL}/empanadas`, {
+  });
+
+  if (!response.ok) {
+    throw new Error('Impossible de récupérer les empanadas');
+  }
+
+  return response.json();
 }

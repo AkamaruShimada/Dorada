@@ -2,6 +2,7 @@
 
 import { Request, Response } from 'express';
 import * as empanadaService from '../services/empanada.service';
+import { uploadImageBuffer, deleteImageByUrl } from '../services/upload.service';
 
 /**
  * Petit helper pour convertir les Decimal Prisma en number
@@ -55,7 +56,14 @@ export const getEmpanadaById = async (req: Request, res: Response) => {
 
 export const createEmpanada = async (req: Request, res: Response) => {
   try {
-    const empanada = await empanadaService.createEmpanada(req.body);
+    let imageUrl: string | undefined;
+
+    if (req.file) {
+      // Upload de l'image sur Cloudinary
+      imageUrl = await uploadImageBuffer(req.file.buffer, 'empanadas');
+    }
+
+    const empanada = await empanadaService.createEmpanada({ ...req.body, imageUrl });
     res.status(201).json(serializeEmpanada(empanada));
   } catch (error) {
     console.error(error);
@@ -71,7 +79,23 @@ export const updateEmpanada = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Id invalide' });
     }
 
-    const empanada = await empanadaService.updateEmpanada(id, req.body);
+    const existingEmpanada = await empanadaService.getEmpanadaById(id);
+    if (!existingEmpanada) {
+      return res.status(404).json({ message: 'Empanada non trouvée' });
+    }
+
+    let imageUrl = existingEmpanada.image_url;
+
+    if (req.file) {
+      // Si une nouvelle image est uploadée, on supprime l'ancienne de Cloudinary
+      if (imageUrl) {
+        await deleteImageByUrl(imageUrl);
+      }
+      // Upload de la nouvelle image sur Cloudinary
+      imageUrl = await uploadImageBuffer(req.file.buffer, 'empanadas');
+    }
+
+    const empanada = await empanadaService.updateEmpanada(id, { ...req.body, image_url: imageUrl });
     res.status(200).json(serializeEmpanada(empanada));
   } catch (error) {
     console.error(error);

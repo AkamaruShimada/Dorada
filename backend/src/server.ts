@@ -7,6 +7,7 @@ import empanadaRoutes from './routes/empanada.routes';
 import extraRoutes from './routes/extra.routes';
 import formuleRoutes from './routes/formule.routes';
 import authRoutes from './routes/auth.routes';
+import cookieParser from 'cookie-parser';
 
 // Charge les variables du fichier .env dans process.env
 dotenv.config();
@@ -14,7 +15,11 @@ dotenv.config();
 const app = express();
 
 // Middlewares globaux, exécutés sur CHAQUE requête entrante
-app.use(cors());              // autorise le frontend à appeler cette API
+app.use(cookieParser());
+app.use(cors({
+  origin: process.env.FRONTEND_URL, // pas de '*' possible avec credentials
+  credentials: true, // indispensable pour accepter les cookies cross-origin
+}));
 app.use(express.json());      // permet de lire le JSON envoyé dans le corps des requêtes
 
 // Route de test, pour vérifier que le serveur répond

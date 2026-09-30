@@ -9,5 +9,8 @@ const router = Router();
 
 router.post('/register', validate(registerSchema), authController.register);
 router.post('/login', validate(loginSchema), authController.login);
+router.post('/logout', authController.logout);
+router.get('/me', authController.me); // authenticate vérifie le cookie avant d'appeler me
+
 
 export default router;
