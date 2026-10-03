@@ -1,7 +1,7 @@
 // frontend/src/pages/admin/AdminEmpanadas.tsx
 
 import { useEffect, useState } from 'react';
-import type { Empanada, EmpanadaPayload } from '../../types/admin.types';
+import type { Empanada } from '../../types/admin.types';
 import {
   getAllEmpanadasAdmin,
   createEmpanada,
@@ -68,57 +68,139 @@ function AdminEmpanadas() {
   if (isLoading) return <p>Chargement des empanadas...</p>;
 
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1>Gestion des empanadas</h1>
-        <button onClick={() => setEditingEmpanada('new')}>
+  <div className="min-h-screen bg-surface p-4 text-primary sm:p-6">
+    <div className="mx-auto max-w-7xl">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Gestion des empanadas
+          </h1>
+          <p className="mt-1 text-sm opacity-70">
+            Consulte et gère les produits de ta boutique.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setEditingEmpanada('new')}
+          className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 font-semibold text-surface shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
           + Nouvelle empanada
         </button>
       </div>
 
-      {error && <p className="error-banner">{error}</p>}
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm text-primary"
+        >
+          {error}
+        </div>
+      )}
 
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Type</th>
-            <th>Prix</th>
-            <th>Stock</th>
-            <th>Sans gluten</th>
-            <th>Actif</th>
-            <th>URL de l'image</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {empanadas.map((empanada) => (
-            <tr key={empanada.id}>
-              <td>{empanada.nom}</td>
-              <td>{empanada.type}</td>
-              <td>{empanada.prix.toFixed(2)} €</td>
-              <td>{empanada.stock}</td>
-              <td>{empanada.sansGluten ? 'Oui' : 'Non'}</td>
-              <td>{empanada.image_url || 'N/A'}</td>
-              <td>
-                <span className={empanada.actif ? 'badge-actif' : 'badge-inactif'}>
-                  {empanada.actif ? 'Actif' : 'Inactif'}
-                </span>
-              </td>
-              <td>
-                <button onClick={() => setEditingEmpanada(empanada)}>
-                  Modifier
-                </button>
-                <button onClick={() => setDeleteTarget(empanada)}>
-                  Supprimer
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {empanadas.length === 0 ? (
+        <div className="rounded-xl border border-primary/10 bg-surface px-6 py-12 text-center shadow-sm">
+          <p className="font-medium">Aucune empanada enregistrée.</p>
+          <p className="mt-1 text-sm opacity-70">
+            Ajoute une empanada pour la voir apparaître ici.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-primary/10 bg-surface shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] text-left text-sm">
+              <thead className="bg-primary text-surface">
+                <tr>
+                  <th scope="col" className="px-4 py-3 font-semibold">
+                    Nom
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold">
+                    Type
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">
+                    Prix
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-center font-semibold">
+                    Stock
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-center font-semibold">
+                    Sans gluten
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold">
+                    URL de l’image
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-center font-semibold">
+                    Statut
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
 
-      {empanadas.length === 0 && <p>Aucune empanada enregistrée.</p>}
+              <tbody className="divide-y divide-primary/10">
+                {empanadas.map((empanada, index) => (
+                  <tr
+                    key={empanada.id}
+                    className={`transition hover:bg-secondary/10 ${
+                      index % 2 === 1 ? 'bg-primary/[0.03]' : 'bg-surface'
+                    }`}
+                  >
+                    <td className="px-4 py-3 font-medium">
+                      {empanada.nom}
+                    </td>
+                    <td className="px-4 py-3">{empanada.type}</td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums">
+                      {empanada.prix.toFixed(2)} €
+                    </td>
+                    <td className="px-4 py-3 text-center tabular-nums">
+                      {empanada.stock}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {empanada.sansGluten ? 'Oui' : 'Non'}
+                    </td>
+                    <td
+                      className="max-w-xs truncate px-4 py-3 opacity-75"
+                      title={empanada.image_url || ''}
+                    >
+                      {empanada.image_url || 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          empanada.actif
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-secondary/20 text-primary'
+                        }`}
+                      >
+                        {empanada.actif ? 'Actif' : 'Inactif'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingEmpanada(empanada)}
+                          className="rounded-md border border-primary/20 px-3 py-1.5 font-medium text-primary transition hover:bg-primary hover:text-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(empanada)}
+                          className="rounded-md bg-secondary px-3 py-1.5 font-medium text-primary transition hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-secondary"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {editingEmpanada && (
         <EmpanadaForm
@@ -136,7 +218,8 @@ function AdminEmpanadas() {
         />
       )}
     </div>
-  );
+  </div>
+);
 }
 
 export default AdminEmpanadas;

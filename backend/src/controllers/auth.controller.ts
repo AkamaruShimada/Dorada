@@ -25,8 +25,8 @@ export const login = async (req: Request, res: Response) => {
 
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: isProduction, // Utilisez HTTPS en production
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
       maxAge: 1000 * 60 * 60 * 24, // 1 jour
     });
 
@@ -45,12 +45,16 @@ export const logout = (req: Request, res: Response) => {
   res.clearCookie('auth_token', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
   });
   res.status(200).json({ message: 'Déconnecté avec succès.' });
 };
 
 export const me = async (req: Request, res: Response) => {
+  // Empêche le navigateur de mettre cette réponse en cache
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
   // req.user est injecté par le middleware authenticate
   // utile pour que le front sache "qui est connecté" au chargement de l'app
   try {
@@ -58,7 +62,15 @@ export const me = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Non authentifié.' });
     }
 
-    res.status(200).json({ user: req.user });
+    // req.user ne contient que id/role (payload du JWT)
+    // il faut récupérer l'utilisateur complet pour matcher le type Utilisateur du front
+    const utilisateur = await authService.getUserById(req.user.id);
+
+    if (!utilisateur) {
+      return res.status(404).json({ message: 'Utilisateur introuvable.' });
+    }
+
+    res.status(200).json({ utilisateur });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erreur serveur.' });

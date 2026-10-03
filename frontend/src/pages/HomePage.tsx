@@ -2,7 +2,7 @@
 
 import Header from "../components/layout/Header"
 import Hero from "../components/sections/Hero"
-import MenuEmpanadas from "../components/sections/MenuEmpanada"
+import SliderEmpanada from "../components/sections/SliderEmpanada"
 
 function HomePage() {
 
@@ -11,7 +11,7 @@ function HomePage() {
         
         <Header/>
         <Hero/>
-        <MenuEmpanadas/>
+        <SliderEmpanada/>
         
         </>
     )

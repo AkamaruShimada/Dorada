@@ -3,6 +3,7 @@
 import { Request, Response } from 'express';
 import * as empanadaService from '../services/empanada.service';
 import { uploadImageBuffer, deleteImageByUrl } from '../services/upload.service';
+import { createEmpanadaSchema, updateEmpanadaSchema } from '../schemas/empanada.schema';
 
 /**
  * Petit helper pour convertir les Decimal Prisma en number
@@ -60,10 +61,10 @@ export const createEmpanada = async (req: Request, res: Response) => {
 
     if (req.file) {
       // Upload de l'image sur Cloudinary
-      imageUrl = await uploadImageBuffer(req.file.buffer, 'empanadas');
+      imageUrl = await uploadImageBuffer(req.file.buffer, '/Dorada/Empanadas');
     }
 
-    const empanada = await empanadaService.createEmpanada({ ...req.body, imageUrl });
+    const empanada = await empanadaService.createEmpanada({ ...req.body, image_url : imageUrl });
     res.status(201).json(serializeEmpanada(empanada));
   } catch (error) {
     console.error(error);
@@ -84,18 +85,32 @@ export const updateEmpanada = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Empanada non trouvée' });
     }
 
+    // On valide et on coerce req.body AVANT de toucher à Prisma
+    const parseResult = updateEmpanadaSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        message: 'Données invalides',
+        errors: parseResult.error.flatten().fieldErrors,
+      });
+    }
+
+    const { removeImage, ...validatedData } = parseResult.data;
+
     let imageUrl = existingEmpanada.image_url;
 
     if (req.file) {
-      // Si une nouvelle image est uploadée, on supprime l'ancienne de Cloudinary
+      // Nouvelle image : on supprime l'ancienne et on upload la nouvelle
       if (imageUrl) {
         await deleteImageByUrl(imageUrl);
       }
-      // Upload de la nouvelle image sur Cloudinary
-      imageUrl = await uploadImageBuffer(req.file.buffer, 'empanadas');
+      imageUrl = await uploadImageBuffer(req.file.buffer, '/Dorada/Empanadas');
+    } else if (removeImage && imageUrl) {
+      // Suppression demandée sans remplacement
+      await deleteImageByUrl(imageUrl);
+      imageUrl = null;
     }
 
-    const empanada = await empanadaService.updateEmpanada(id, { ...req.body, image_url: imageUrl });
+    const empanada = await empanadaService.updateEmpanada(id, { ...validatedData, image_url: imageUrl });
     res.status(200).json(serializeEmpanada(empanada));
   } catch (error) {
     console.error(error);

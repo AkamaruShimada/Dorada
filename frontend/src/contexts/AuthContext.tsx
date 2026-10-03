@@ -6,50 +6,68 @@ import type { Utilisateur } from '../types/auth.types';
 
 interface AuthContextType {
   utilisateur: Utilisateur | null;
-  token: string | null;
   isAuthenticated: boolean;
-  login: (token: string, utilisateur: Utilisateur) => void;
-  logout: () => void;
+  isLoading: boolean;
+  login: (utilisateur: Utilisateur) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Au chargement de l'app, on récupère les infos stockées si elles existent
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
+    async function checkAuth() {
+      try {
+        const response = await fetch(`${API_URL}/auth/me`, {
+          method: 'GET',
+          credentials: 'include', // Important pour envoyer les cookies
+        });
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUtilisateur(JSON.parse(storedUser));
+        if (response.ok) {
+          const data = await response.json();
+          setUtilisateur(data.utilisateur);
+        } else {
+          setUtilisateur(null);
+        }
+      } catch (error) {
+        setUtilisateur(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    checkAuth();
   }, []);
 
-  function login(newToken: string, newUtilisateur: Utilisateur) {
-    localStorage.setItem(TOKEN_KEY, newToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(newUtilisateur));
-    setToken(newToken);
+  // login ne reçoit plus de token : il est déjà posé en cookie par le backend
+  // on met juste à jour l'état local avec les infos utilisateur reçues
+  function login(newUtilisateur: Utilisateur) {
     setUtilisateur(newUtilisateur);
   }
 
-  function logout() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    setToken(null);
-    setUtilisateur(null);
+  async function logout() {
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include', // pour que le backend puisse clear le cookie
+      });
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion', error);
+    } finally {
+      setUtilisateur(null);
+    }
   }
 
   const value: AuthContextType = {
     utilisateur,
-    token,
-    isAuthenticated: !!token,
+    isAuthenticated: !!utilisateur,
+    isLoading,
     login,
     logout,
   };

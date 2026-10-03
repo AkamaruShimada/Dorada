@@ -21,7 +21,7 @@ function LoginPage() {
 
     try {
       const data = await loginRequest({ email, motDePasse });
-      login(data.token, data.utilisateur);
+      login(data.utilisateur);
 
       const destination = data.utilisateur.typeCompte === 'CLIENT' ? '/' : '/admin';
       navigate(destination);

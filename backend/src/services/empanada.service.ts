@@ -21,7 +21,7 @@ export const createEmpanada = async (data: CreateEmpanadaInput) => {
 
 export const updateEmpanada = async (
   id: number,
-  data: UpdateEmpanadaInput
+  data: UpdateEmpanadaInput & { image_url?: string | null }
 ) => {
   return prisma.empanada.update({ where: { id }, data });
 };
@@ -33,8 +33,7 @@ export const updateEmpanada = async (
  * Prisma refusera d'ailleurs la suppression si une contrainte de clé étrangère existe.
  */
 export const deleteEmpanada = async (id: number) => {
-  return prisma.empanada.update({
-    where: { id },
-    data: { actif: false },
+  return prisma.empanada.delete({
+    where: { id }
   });
 };

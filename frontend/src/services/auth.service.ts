@@ -5,8 +5,9 @@ import type { LoginPayload, LoginResponse, ApiErrorResponse } from '../types/aut
 const API_URL = import.meta.env.VITE_API_URL;
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const response = await fetch(`${API_URL}/api/auth/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
+    credentials: 'include', // Important pour envoyer les cookies
     headers: {
       'Content-Type': 'application/json',
     },

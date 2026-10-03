@@ -86,3 +86,27 @@ export const loginUtilisateur = async (data: LoginInput) => {
   // 3. Ni l'un ni l'autre
   throw new Error('IDENTIFIANTS_INVALIDES');
 };
+
+export const getUserById = async (id: number) => {
+  // On cherche d'abord côté Utilisateur
+  const utilisateur = await prisma.utilisateur.findUnique({
+    where: { id },
+  });
+
+  if (utilisateur) {
+    const { motDePasse, ...utilisateurSansMotDePasse } = utilisateur;
+    return utilisateurSansMotDePasse;
+  }
+
+  // Si l'utilisateur n'est pas trouvé côté Utilisateur, on cherche côté Client
+  const client = await prisma.client.findUnique({
+    where: { id },
+  });
+
+  if (client) {
+    const { motDePasse, ...clientSansMotDePasse } = client;
+    return { ...clientSansMotDePasse, role: 'CLIENT', typeCompte: 'CLIENT' as const };
+  }
+
+  throw new Error('UTILISATEUR_NON_TROUVE');
+};

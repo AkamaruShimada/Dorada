@@ -37,8 +37,7 @@ export const updateExtra = async (
  * Prisma refusera d'ailleurs la suppression si une contrainte de clé étrangère existe.
  */
 export const deleteExtra = async (id: number) => {
-  return prisma.extra.update({
-    where: { id },
-    data: { actif: false },
+  return prisma.extra.delete({
+    where: { id }
   });
 };
