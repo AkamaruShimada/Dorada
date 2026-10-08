@@ -24,7 +24,8 @@ export const updateFormule = async (id: number, data: UpdateFormuleInput) => {
 }
 
 export const deleteFormule = async (id: number) => {
-    return prisma.formule.delete({
-        where: { id }
+    return prisma.formule.update({
+        where: { id },
+        data: { actif: false }
     });
 }
