@@ -7,8 +7,9 @@ export interface Empanada {
   id: number;
   nom: string;
   description: string;
-  prix: number;
   type: TypeEmpanada;
+  prixHt: number;
+  tauxTva: number;
   sansGluten: boolean;
   stock: number;
   actif: boolean;
@@ -23,9 +24,12 @@ export interface Extra {
   nom: string;
   description: string;
   type: TypeExtra;
-  prix: number;
+  prixHt: number;
+  tauxTva: number;
+  sansGluten: boolean;
   stock: number;
   actif: boolean;
+  image_url: string;
 }
 
 export type ExtraPayload = Omit<Extra, 'id'>;
@@ -34,7 +38,8 @@ export interface Formule {
   id: number;
   nom: string;
   description: string;
-  prix: number;
+  prixHt: number;
+  image_url: string | null;
   actif: boolean;
   nombreEmpanadas: number;
   nombreExtras: number;

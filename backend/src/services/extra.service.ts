@@ -25,7 +25,7 @@ export const createExtra = async (data: CreateExtraInput) => {
 
 export const updateExtra = async (
   id: number,
-  data: UpdateExtraInput
+  data: UpdateExtraInput & { image_url?: string | null}
 ) => {
   return prisma.extra.update({ where: { id }, data });
 };

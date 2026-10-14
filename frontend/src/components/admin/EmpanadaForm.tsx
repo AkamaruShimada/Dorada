@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import type { Empanada, TypeEmpanada } from '../../types/admin.types';
+import { usePrice } from '../../hooks/usePrice';
 
 interface EmpanadaFormProps {
   initialData: Empanada | null; // null = mode création
@@ -12,7 +13,14 @@ interface EmpanadaFormProps {
 function EmpanadaForm({ initialData, onSave, onCancel }: EmpanadaFormProps) {
   const [nom, setNom] = useState(initialData?.nom ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
-  const [prix, setPrix] = useState(initialData?.prix ?? 0);
+  const {
+    prixHt,
+    prixTtc,
+    tauxTva,
+    handlePrixHtChange,
+    handlePrixTtcChange,
+    handleTauxTvaChange,
+  } = usePrice(initialData);
   const [type, setType] = useState<TypeEmpanada>(initialData?.type ?? 'SALEE');
   const [sansGluten, setSansGluten] = useState(initialData?.sansGluten ?? false);
   const [stock, setStock] = useState(initialData?.stock ?? 0);
@@ -50,7 +58,8 @@ function handleSubmit(event: React.SubmitEvent) {
   const formData = new FormData();
   formData.append('nom', nom);
   formData.append('description', description);
-  formData.append('prix', prix.toString());
+  formData.append('prixHt', prixHt.toString());
+  formData.append('tauxTva', tauxTva.toString())
   formData.append('type', type);
   formData.append('sansGluten', sansGluten.toString());
   formData.append('stock', stock.toString());
@@ -123,28 +132,7 @@ function handleSubmit(event: React.SubmitEvent) {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label
-                htmlFor="empanada-prix"
-                className="mb-1.5 block text-sm font-semibold"
-              >
-                Prix (€)
-              </label>
-              <input
-                id="empanada-prix"
-                type="number"
-                step="0.01"
-                min="0"
-                value={prix}
-                onChange={(event) =>
-                  setPrix(event.target.value === '' ? 0 : Number(event.target.value))
-                }
-                required
-                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
                 htmlFor="empanada-type"
@@ -182,6 +170,65 @@ function handleSubmit(event: React.SubmitEvent) {
                 onChange={(event) =>
                   setStock(event.target.value === '' ? 0 : Number(event.target.value))
                 }
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label
+                htmlFor="empanada-prix-ht"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Prix Ht (€)
+              </label>
+              <input
+                id="empanada-prix-ht"
+                type="number"
+                step="0.01"
+                min="0"
+                value={prixHt}
+                onChange={(event) => handlePrixHtChange(event.target.value)}
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="empanada-taux-tva"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Taux TVA (%)
+              </label>
+              <input
+                id="empanada-taux-tva"
+                type="number"
+                step="0.1"
+                min="0"
+                value={tauxTva}
+                onChange={(event) => handleTauxTvaChange(event.target.value)}
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="empanada-prix-ttc"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Prix TTC (€)
+              </label>
+              <input
+                id="empanada-prix-ttc"
+                type="number"
+                step="0.01"
+                min="0"
+                value={prixTtc}
+                onChange={(event) => handlePrixTtcChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />

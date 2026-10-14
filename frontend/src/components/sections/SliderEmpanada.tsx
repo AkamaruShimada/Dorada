@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Empanada } from "../../types/admin.types";
 import { getEmpanadas } from "../../services/empanada.service";
+import { calculerTtc } from "../../utils/pricing";
 
 export default function EmpanadaShowcaseSlider() {
   const [empanadas, setEmpanadas] = useState<Empanada[]>([]);
@@ -115,7 +116,7 @@ export default function EmpanadaShowcaseSlider() {
                   />
 
                   <span className="absolute right-4 top-4 rounded-full bg-[#102820]/90 px-4 py-2 text-sm font-semibold text-[#e0bd79]">
-                    {empanada.prix.toFixed(2)} €
+                    {calculerTtc(String(empanada.prixHt), String(empanada.tauxTva))} €
                   </span>
                 </div>
 

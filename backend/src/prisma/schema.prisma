@@ -45,14 +45,17 @@ model Empanada {
   id          Int           @id @default(autoincrement())
   nom         String
   description String
-  prix        Decimal
   type        TypeEmpanada
-  image_url   String?       
-  sansGluten  Boolean       @default(false)
   stock       Int           @default(0)
+  prixHt      Decimal @db.Decimal(10, 2)
+  tauxTva     Decimal @default(5.5) @db.Decimal(4, 2)
+  sansGluten  Boolean       @default(false)
+  image_url   String?       
   actif       Boolean       @default(true)
 
   commandeEmpanadas CommandeEmpanada[]
+
+  @@index([actif])
 
   @@map("empanadas")
 }
@@ -62,9 +65,11 @@ model Extra {
   nom         String
   description String
   type        TypeExtra
-  image_url   String?
-  prix        Decimal
   stock       Int          @default(0)
+  tauxTva     Decimal @default(5.5) @db.Decimal(4, 2)
+  prixHt      Decimal @db.Decimal(10, 2)
+  sansGluten  Boolean?       @default(false)
+  image_url   String?
   actif       Boolean  @default(true)
 
   commandeExtras CommandeExtra[]
@@ -76,7 +81,7 @@ model Formule {
   id          Int      @id @default(autoincrement())
   nom         String
   description String
-  prix        Decimal
+  prixHt      Decimal @db.Decimal(10, 2)
   image_url   String?
   actif       Boolean  @default(true)
 
@@ -149,12 +154,19 @@ model Commande {
   dateSouhaitee     DateTime
   creeLe            DateTime         @default(now())
 
-  client            Client?          @relation(fields: [clientId], references: [id])
+  client            Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
   clientId          Int?
+
+  totalHt   Decimal @db.Decimal(10, 2)
+  totalTva  Decimal @db.Decimal(10, 2)
+  totalTtc  Decimal @db.Decimal(10, 2)
 
   empanadas CommandeEmpanada[]
   extras    CommandeExtra[]
   formules  CommandeFormule[]
+
+  @@index([statut, dateSouhaitee])
+  @@index([clientId])
 
   @@map("commandes")
 }
@@ -167,7 +179,8 @@ model CommandeEmpanada {
   empanada      Empanada @relation(fields: [empanadaId], references: [id])
   empanadaId    Int
   quantite      Int
-  prixUnitaire  Decimal?  // prix figé au moment de la commande
+  prixUnitaireHt Decimal  @db.Decimal(10, 2)  // obligatoire, plus de "?"
+  tauxTva        Decimal  @db.Decimal(4, 2)   // obligatoire
 
   commandeFormule CommandeFormule? @relation(fields: [commandeFormuleId], references: [id])
   commandeFormuleId Int?
@@ -182,7 +195,8 @@ model CommandeExtra {
   extra         Extra    @relation(fields: [extraId], references: [id])
   extraId       Int
   quantite      Int
-  prixUnitaire  Decimal?
+  prixUnitaireHt Decimal  @db.Decimal(10, 2)  // obligatoire, plus de "?"
+  tauxTva        Decimal  @db.Decimal(4, 2)   // obligatoire
 
   commandeFormule    CommandeFormule? @relation(fields: [commandeFormuleId], references: [id])
   commandeFormuleId  Int?
@@ -198,7 +212,7 @@ model CommandeFormule {
   formule       Formule  @relation(fields: [formuleId], references: [id])
   formuleId     Int
   quantite      Int
-  prixUnitaire  Decimal  // prix de la formule figé au moment de la commande
+  prixUnitaireHt Decimal  @db.Decimal(10, 2)  // obligatoire, plus de "?"
 
   empanadasChoisies CommandeEmpanada[] // les empanadas de CETTE formule commandée
   extrasChoisis     CommandeExtra[]

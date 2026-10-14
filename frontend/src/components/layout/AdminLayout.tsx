@@ -29,8 +29,8 @@ function AdminLayout() {
                 <NavLink to="/admin" end>Tableau de bord
                 </NavLink>
                 <NavLink to="/admin/empanadas">Empanadas</NavLink>
-                <NavLink to="/admin/formules">Formules</NavLink>
                 <NavLink to="/admin/extras">Extras</NavLink>
+                <NavLink to="/admin/formules">Formules</NavLink>
                 <NavLink to="/admin/commandes">Commandes</NavLink>
             </nav>
 

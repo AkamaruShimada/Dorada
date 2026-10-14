@@ -11,7 +11,7 @@ import { createEmpanadaSchema, updateEmpanadaSchema } from '../schemas/empanada.
  */
 const serializeEmpanada = (empanada: any) => ({
   ...empanada,
-  prix: Number(empanada.prix),
+  prixHt: Number(empanada.prixHt),
 });
 
 export const getAllEmpanadas = async (req: Request, res: Response) => {

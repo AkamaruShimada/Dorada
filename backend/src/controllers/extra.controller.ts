@@ -2,6 +2,9 @@
 
 import { Request, Response } from 'express';
 import * as extraService from '../services/extra.service';
+import { uploadImageBuffer, deleteImageByUrl } from '../services/upload.service';
+import { createExtraSchema, updateExtraSchema} from '../schemas/extra.schema'
+
 
 /**
  * Petit helper pour convertir les Decimal Prisma en number
@@ -9,7 +12,7 @@ import * as extraService from '../services/extra.service';
  */
 const serializeExtra = (extra: any) => ({
   ...extra,
-  prix: Number(extra.prix),
+  prixHt: Number(extra.prixHt),
 });
 
 export const getAllExtras = async (req: Request, res: Response) => {
@@ -55,7 +58,13 @@ export const getExtraById = async (req: Request, res: Response) => {
 
 export const createExtra = async (req: Request, res: Response) => {
   try {
-    const extra = await extraService.createExtra(req.body);
+    let imageUrl: String | undefined
+
+    if(req.file) {
+      imageUrl = await uploadImageBuffer(req.file.buffer, '/Dorada/Extras')
+    }
+
+    const extra = await extraService.createExtra( {...req.body, image_url: imageUrl});
     res.status(201).json(serializeExtra(extra));
   } catch (error) {
     console.error(error);
@@ -63,16 +72,44 @@ export const createExtra = async (req: Request, res: Response) => {
   }
 };
 
+
 export const updateExtra = async (req: Request, res: Response) => {
   try {
-
     const id = Number(req.params.id);
 
     if (isNaN(id)) {
       return res.status(400).json({ message: 'Id invalide' });
     }
 
-    const extra = await extraService.updateExtra(id, req.body);
+    const existingExtra = await extraService.getExtraById(id);
+    if (!existingExtra) {
+      return res.status(404).json({ message: 'Extra non trouvé'});
+    }
+
+    const parseResult = updateExtraSchema.safeParse(req.body);
+
+    if (!parseResult.success) {
+      return res.status(400).json({
+        message: 'Données invalides',
+        errors: parseResult.error.flatten().fieldErrors,
+      });
+    }
+
+    const { removeImage, ...validatedData } = parseResult.data;
+
+    let imageUrl = existingExtra.image_url
+
+    if (req.file) {
+      if (imageUrl) {
+        await deleteImageByUrl(imageUrl);
+      }
+      imageUrl = await uploadImageBuffer(req.file.buffer, '/Dorada/Extras')
+    }else if (removeImage && imageUrl) {
+      await deleteImageByUrl(imageUrl)
+      imageUrl = null;
+    }
+
+    const extra = await extraService.updateExtra(id, { ...validatedData, image_url: imageUrl});
     res.status(200).json(serializeExtra(extra));
   } catch (error) {
     console.error(error);

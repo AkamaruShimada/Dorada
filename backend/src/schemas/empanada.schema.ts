@@ -13,7 +13,8 @@ const booleanFromFormData = z
 export const createEmpanadaSchema = z.object({
   nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
   description: z.string().min(5, 'La description est trop courte'),
-  prix: z.coerce.number().positive('Le prix doit être positif'),
+  prixHt: z.coerce.number().positive('Le prix doit être positif'),
+  tauxTva: z.coerce.number().positive('Le taux doit être être positif'),
   type: z.enum(['SALEE', 'SUCREE', 'VEGETARIEN']),
   sansGluten: booleanFromFormData.default(false),
   stock: z.coerce.number().int().nonnegative().default(0),
@@ -21,7 +22,6 @@ export const createEmpanadaSchema = z.object({
 });
 
 // Pour la mise à jour : tous les champs optionnels
-// backend/src/schemas/empanada.schema.ts
 export const updateEmpanadaSchema = createEmpanadaSchema.partial().extend({
   removeImage: z.coerce.boolean().optional(),
 });

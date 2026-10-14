@@ -1,0 +1,320 @@
+// frontend/src/components/admin/ExtraForm.tsx
+
+import { useRef, useState } from 'react';
+import type { Extra, TypeExtra } from '../../types/admin.types';
+import { usePrice } from '../../hooks/usePrice';
+
+interface ExtraFormProps {
+  initialData: Extra | null; // null = mode création
+  onSave: (formData: FormData) => void;
+  onCancel: () => void;
+}
+
+function ExtraForm({ initialData, onSave, onCancel }: ExtraFormProps) {
+  const [nom, setNom] = useState(initialData?.nom ?? '');
+  const [description, setDescription] = useState(initialData?.description ?? '');
+  const {
+    prixHt,
+    prixTtc,
+    tauxTva,
+    handlePrixHtChange,
+    handlePrixTtcChange,
+    handleTauxTvaChange,
+  } = usePrice(initialData);
+  const [type, setType] = useState<TypeExtra>(initialData?.type ?? 'DOUCEUR');
+  const [sansGluten, setSansGluten] = useState(initialData?.sansGluten ?? false);
+  const [stock, setStock] = useState(initialData?.stock ?? 0);
+  const [actif, setActif] = useState(initialData?.actif ?? true);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+  initialData?.image_url ?? null);
+  const [imageRemoved, setImageRemoved] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  setImageFile(file);
+  setImagePreview(URL.createObjectURL(file)); // aperçu local immédiat
+  setImageRemoved(false); // si on choisit un fichier, on ne veut pas supprimer l'image existante
+}
+
+function handleRemoveImage() {
+  setImageFile(null);
+  setImagePreview(null);
+  setImageRemoved(true);
+
+    // Permet de sélectionner à nouveau le même fichier ensuite.
+  if (imageInputRef.current) {
+    imageInputRef.current.value = '';
+  }
+}
+
+function handleSubmit(event: React.SubmitEvent) {
+  event.preventDefault();
+
+  const formData = new FormData();
+  formData.append('nom', nom);
+  formData.append('description', description);
+  formData.append('prixHt', prixHt.toString());
+  formData.append('tauxTva', tauxTva.toString())
+  formData.append('type', type);
+  formData.append('sansGluten', sansGluten.toString())
+  formData.append('stock', stock.toString());
+  formData.append('actif', actif.toString());
+  
+  formData.append('removeImage', String(imageRemoved));
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+  
+  onSave(formData); // le type change : FormData au lieu de ExtraPayload
+}
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-4"
+      onClick={onCancel}
+    >
+      <form
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="extra-form-title"
+        onSubmit={handleSubmit}
+        onClick={(event) => event.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-primary/10 bg-surface p-5 text-primary shadow-2xl sm:p-7"
+      >
+        <div className="mb-6">
+          <h2
+            id="extra-form-title"
+            className="text-2xl font-bold"
+          >
+            {initialData ? 'Modifier' : 'Créer'} un extra
+          </h2>
+          <p className="mt-1 text-sm opacity-70">
+            Renseigne les informations du produit ci-dessous.
+          </p>
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <label
+              htmlFor="extra-nom"
+              className="mb-1.5 block text-sm font-semibold"
+            >
+              Nom
+            </label>
+            <input
+              id="extra-nom"
+              value={nom}
+              onChange={(event) => setNom(event.target.value)}
+              required
+              className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition placeholder:opacity-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="extra-description"
+              className="mb-1.5 block text-sm font-semibold"
+            >
+              Description
+            </label>
+            <textarea
+              id="extra-description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              required
+              rows={4}
+              className="w-full resize-y rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition placeholder:opacity-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="extra-type"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Type
+              </label>
+              <select
+                id="extra-type"
+                value={type}
+                onChange={(event) =>
+                  setType(event.target.value as TypeExtra)
+                }
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="DOUCEUR">Douceur</option>
+                <option value="BOISSON">Boisson</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="extra-stock"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Stock
+              </label>
+              <input
+                id="extra-stock"
+                type="number"
+                min="0"
+                step="1"
+                value={stock}
+                onChange={(event) =>
+                  setStock(event.target.value === '' ? 0 : Number(event.target.value))
+                }
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label
+                htmlFor="extra-prix-ht"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Prix HT (€)
+              </label>
+              <input
+                id="extra-prix-ht"
+                type="number"
+                step="0.01"
+                min="0"
+                value={prixHt}
+                onChange={(event) => handlePrixHtChange(event.target.value)}
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="extra-taux-tva"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Taux TVA (%)
+              </label>
+              <input
+                id="extra-taux-tva"
+                type="number"
+                step="0.1"
+                min="0"
+                value={tauxTva}
+                onChange={(event) => handleTauxTvaChange(event.target.value)}
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="extra-prix-ttc"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Prix TTC (€)
+              </label>
+              <input
+                id="extra-prix-ttc"
+                type="number"
+                step="0.01"
+                min="0"
+                value={prixTtc}
+                onChange={(event) => handlePrixTtcChange(event.target.value)}
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="extra-image"
+              className="mb-1.5 block text-sm font-semibold"
+            >
+              Image
+            </label>
+            <input
+              ref={imageInputRef}
+              id="extra-image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleImageChange}
+              className="block w-full cursor-pointer rounded-lg border border-primary/20 bg-surface text-sm file:mr-4 file:cursor-pointer file:border-0 file:bg-primary file:px-4 file:py-2.5 file:font-semibold file:text-surface hover:file:opacity-90"
+            />
+
+            {imagePreview && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium">Aperçu de l’image</p>
+
+                <div className="flex flex-wrap items-start gap-4">
+                  <img
+                    src={imagePreview}
+                    alt={`Aperçu de ${nom || 'l’extra'}`}
+                    className="h-40 w-40 rounded-lg border border-primary/10 object-cover shadow-sm"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="rounded-lg bg-secondary px-4 py-2 font-semibold text-primary transition hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2"
+                  >
+                    Retirer l’image
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3 rounded-lg bg-primary/5 p-4">
+            <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={sansGluten}
+                onChange={(event) => setSansGluten(event.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Sans gluten
+            </label>
+
+            <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={actif}
+                onChange={(event) => setActif(event.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Actif (visible sur le site)
+            </label>
+          </div>
+        </div>
+
+        <div className="mt-7 flex flex-col-reverse gap-3 border-t border-primary/10 pt-5 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-primary/20 px-4 py-2.5 font-medium transition hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            Annuler
+          </button>
+
+          <button
+            type="submit"
+            className="rounded-lg bg-primary px-4 py-2.5 font-semibold text-surface shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default ExtraForm;

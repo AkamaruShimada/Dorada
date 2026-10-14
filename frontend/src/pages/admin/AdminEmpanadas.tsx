@@ -118,7 +118,13 @@ function AdminEmpanadas() {
                     Type
                   </th>
                   <th scope="col" className="px-4 py-3 text-right font-semibold">
-                    Prix
+                    Prix HT
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">
+                    Taux TVA
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">
+                    Prix TTC
                   </th>
                   <th scope="col" className="px-4 py-3 text-center font-semibold">
                     Stock
@@ -151,7 +157,13 @@ function AdminEmpanadas() {
                     </td>
                     <td className="px-4 py-3">{empanada.type}</td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
-                      {empanada.prix.toFixed(2)} €
+                      {empanada.prixHt.toFixed(2)} €
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums">
+                      {empanada.tauxTva} %
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums">
+                      {(empanada.prixHt * (1 + (empanada.tauxTva / 100))).toFixed(2)} €
                     </td>
                     <td className="px-4 py-3 text-center tabular-nums">
                       {empanada.stock}
@@ -212,7 +224,7 @@ function AdminEmpanadas() {
 
       {deleteTarget && (
         <ConfirmModal
-          message={`Supprimer "${deleteTarget.nom}" ? Cette action est irréversible.`}
+          message={`Désactiver "${deleteTarget.nom}" ? Celui-ci sera notifié comme indisponible au client.`}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />

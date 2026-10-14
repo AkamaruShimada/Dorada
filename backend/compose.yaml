@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17
+    container_name: dorada-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dorada
+      POSTGRES_PASSWORD: Akamaru21Dorada
+      POSTGRES_DB: dorada_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - dorada_pgdata:/var/lib/postgresql/data
+
+volumes:
+  dorada_pgdata:
