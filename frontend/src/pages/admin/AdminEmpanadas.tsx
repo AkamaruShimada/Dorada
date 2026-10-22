@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import type { Empanada } from '../../types/admin.types';
 import {
-  getAllEmpanadasAdmin,
+  getAllEmpanadas,
   createEmpanada,
   updateEmpanada,
   deleteEmpanada,
 } from '../../services/admin/empanada.service';
 import EmpanadaForm from '../../components/admin/EmpanadaForm';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import { calculerTtc, formatPrix } from '../../utils/pricing';
 
 function AdminEmpanadas() {
   const [empanadas, setEmpanadas] = useState<Empanada[]>([]);
@@ -30,7 +31,7 @@ function AdminEmpanadas() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getAllEmpanadasAdmin();
+      const data = await getAllEmpanadas();
       setEmpanadas(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -157,13 +158,13 @@ function AdminEmpanadas() {
                     </td>
                     <td className="px-4 py-3">{empanada.type}</td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
-                      {empanada.prixHt.toFixed(2)} €
+                      {formatPrix(empanada.prixHt)}
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
                       {empanada.tauxTva} %
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
-                      {(empanada.prixHt * (1 + (empanada.tauxTva / 100))).toFixed(2)} €
+                      {formatPrix(calculerTtc(empanada.prixHt, empanada.tauxTva))}
                     </td>
                     <td className="px-4 py-3 text-center tabular-nums">
                       {empanada.stock}
@@ -224,6 +225,7 @@ function AdminEmpanadas() {
 
       {deleteTarget && (
         <ConfirmModal
+          title='Confirmer la désactivation'
           message={`Désactiver "${deleteTarget.nom}" ? Celui-ci sera notifié comme indisponible au client.`}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}

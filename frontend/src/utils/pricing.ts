@@ -1,29 +1,34 @@
 // frontend/src/utils/pricing.ts
 
-function parseAmount(value: string): number | null {
-  if (value.trim() === '') return null;
+import type { CartItem } from '../types/cart.types';
 
-  const amount = Number(value);
-  return Number.isFinite(amount) ? amount : null;
+/** Arrondit au centime près (évite les erreurs de flottants type 1.005) */
+export const arrondir = (n: number): number =>
+  Math.round((n + Number.EPSILON) * 100) / 100;
+
+/** TTC unitaire à partir du HT : c'est LE calcul de référence */
+export const calculerTtc = (prixHt: number, tauxTva: number): number =>
+  arrondir(prixHt * (1 + tauxTva / 100));
+
+/** HT à partir d'un TTC (utile seulement à la saisie dans l'admin) */
+export const calculerHt = (prixTtc: number, tauxTva: number): number =>
+  arrondir(prixTtc / (1 + tauxTva / 100));
+
+/** Total d'une ligne : TTC unitaire arrondi × quantité */
+export const totalLigneTtc = (prixHt: number, tauxTva: number, quantite: number): number =>
+  arrondir(calculerTtc(prixHt, tauxTva) * quantite);
+
+export const formatPrix = (n: number): string =>
+  n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+
+
+export function totalLigne(item: CartItem): number {
+  if (item.kind === 'formule') {
+    return arrondir(item.prixTtc * item.quantite);
+  }
+  return totalLigneTtc(item.prixHt, item.tauxTva, item.quantite);
 }
 
-export function calculerTtc(prixHt: string, taux: string): string {
-  const ht = parseAmount(prixHt);
-  const tva = parseAmount(taux);
-
-  if (ht === null || tva === null) return '';
-
-  return (ht * (1 + tva / 100)).toFixed(2);
-}
-
-export function calculerHt(prixTtc: string, taux: string): string {
-  const ttc = parseAmount(prixTtc);
-  const tva = parseAmount(taux);
-
-  if (ttc === null || tva === null) return '';
-
-  const coefficient = 1 + tva / 100;
-  if (coefficient <= 0) return '';
-
-  return (ttc / coefficient).toFixed(2);
+export function totalPanierTtc(items: CartItem[]): number {
+  return arrondir(items.reduce((s, i) => s + totalLigne(i), 0));
 }

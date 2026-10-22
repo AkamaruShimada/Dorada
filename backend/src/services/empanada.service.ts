@@ -4,9 +4,8 @@ import prisma from '../prisma/client';
 import { CreateEmpanadaInput, UpdateEmpanadaInput } from '../schemas/empanada.schema';
 
 
-export const getAllEmpanadas = async (includeInactive: boolean = false) => {
+export const getAllEmpanadas = async () => {
   return prisma.empanada.findMany({
-    where: includeInactive ? {} : { actif: true },
     orderBy: { nom: 'asc' },
   });
 };

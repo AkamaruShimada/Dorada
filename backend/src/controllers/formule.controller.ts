@@ -5,22 +5,12 @@ import * as formuleService from "../services/formule.service";
 
 const serializeFormule = (formule: any) => ({
   ...formule,
-  prix: Number(formule.prix),
+  prixTtc: Number(formule.prixTtc),
 });
 
 export const getAllFormules = async (req: Request, res: Response) => {
     try {
-        const formules = await formuleService.getAllFormules(false);
-        res.status(200).json(formules.map(serializeFormule));
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur serveur" });
-    }
-}
-
-export const getAllFormulesAdmin = async (req: Request, res: Response) => {
-    try {
-        const formules = await formuleService.getAllFormules(true);
+        const formules = await formuleService.getAllFormules();
         res.status(200).json(formules.map(serializeFormule));
     } catch (error) {
         console.error(error);

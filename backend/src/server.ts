@@ -1,18 +1,26 @@
 // backend/src/server.ts
 
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import empanadaRoutes from './routes/empanada.routes';
 import extraRoutes from './routes/extra.routes';
 import formuleRoutes from './routes/formule.routes';
+import commandeRoutes from './routes/commande.routes'
 import authRoutes from './routes/auth.routes';
-import cookieParser from 'cookie-parser';
+import codePromoRoutes from './routes/codePromo.routes'
 
-// Charge les variables du fichier .env dans process.env
-dotenv.config();
+import cookieParser from 'cookie-parser';
+import { stripeWebhookHandler } from './controllers/stripe.controller';
+import { Prisma } from '@prisma/client';
+
+(Prisma.Decimal.prototype as any).toJSON = function () {
+  return this.toNumber();
+};
 
 const app = express();
+
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json'}), stripeWebhookHandler,);
 
 // Middlewares globaux, exécutés sur CHAQUE requête entrante
 app.use(cookieParser());
@@ -33,6 +41,10 @@ app.use('/api/empanadas', empanadaRoutes);
 app.use('/api/extras', extraRoutes);
 // Utilise les routes de formule
 app.use('/api/formules', formuleRoutes);
+// Utilise les routes de commandes
+app.use('/api/commandes', commandeRoutes)
+// Utilise les routes des code Promo
+app.use('/api/codes-promo', codePromoRoutes);
 
 // Utilise l'authentification et la gestion des utilisateurs
 app.use('/api/auth', authRoutes);

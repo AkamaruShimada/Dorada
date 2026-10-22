@@ -1,12 +1,13 @@
 // frontend/src/components/admin/ConfirmModal.tsx
 
 interface ConfirmModalProps {
+  title?: string;
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-function ConfirmModal({ message, onConfirm, onCancel }: ConfirmModalProps) {
+function ConfirmModal({ title, message, onConfirm, onCancel }: ConfirmModalProps) {
 return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-4"
@@ -25,7 +26,7 @@ return (
             id="confirm-modal-title"
             className="text-xl font-bold"
           >
-            Confirmer la suppression
+            {title}
           </h2>
 
           <p

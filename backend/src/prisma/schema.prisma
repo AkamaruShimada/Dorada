@@ -25,10 +25,12 @@ enum TypeExtra {
 }
 
 enum StatutCommande {
-  EN_ATTENTE
+  EN_ATTENTE_PAIEMENT
   VALIDEE
   RECUPEREE
   ANNULEE
+  EXPIREE
+  REMBOURSEE
 }
 
 enum ModeRecuperation {
@@ -36,186 +38,256 @@ enum ModeRecuperation {
   LIVRAISON
 }
 
+enum MotifRemboursement {
+  STOCK_INSUFFISANT
+  CAPACITE_DEPASSEE
+  ERREUR_COMMANDE
+  GESTE_COMMERCIAL
+  AUTRE
+}
+
+enum StatutRemboursement {
+  EN_COURS
+  REUSSI
+  ECHOUE
+}
+
 enum RoleUtilisateur {
   ADMIN
   EMPLOYE
 }
 
+// --- Catalogue ---
+
 model Empanada {
-  id          Int           @id @default(autoincrement())
-  nom         String
-  description String
-  type        TypeEmpanada
-  stock       Int           @default(0)
-  prixHt      Decimal @db.Decimal(10, 2)
-  tauxTva     Decimal @default(5.5) @db.Decimal(4, 2)
-  sansGluten  Boolean       @default(false)
-  image_url   String?       
-  actif       Boolean       @default(true)
+  id                    Int           @id @default(autoincrement())
+  nom                   String
+  description           String
+  type                  TypeEmpanada
+  stock                 Int           @default(0)
+  prixHt                Decimal       @db.Decimal(10, 2)
+  tauxTva               Decimal       @default(5.5) @db.Decimal(4, 2)
+  sansGluten            Boolean       @default(false)
+  image_url             String?
+  actif                 Boolean       @default(true)
+  supplementFormuleTtc  Decimal       @default(0) @db.Decimal(10, 2)
 
   commandeEmpanadas CommandeEmpanada[]
 
   @@index([actif])
-
   @@map("empanadas")
 }
 
 model Extra {
-  id          Int      @id @default(autoincrement())
-  nom         String
-  description String
-  type        TypeExtra
-  stock       Int          @default(0)
-  tauxTva     Decimal @default(5.5) @db.Decimal(4, 2)
-  prixHt      Decimal @db.Decimal(10, 2)
-  sansGluten  Boolean?       @default(false)
-  image_url   String?
-  actif       Boolean  @default(true)
+  id                    Int        @id @default(autoincrement())
+  nom                   String
+  description           String
+  type                  TypeExtra
+  stock                 Int        @default(0)
+  tauxTva               Decimal    @default(5.5) @db.Decimal(4, 2)
+  prixHt                Decimal    @db.Decimal(10, 2)
+  sansGluten            Boolean?   @default(false)
+  image_url             String?
+  actif                 Boolean    @default(true)
+  supplementFormuleTtc  Decimal    @default(0) @db.Decimal(10, 2)
 
   commandeExtras CommandeExtra[]
 
+  @@index([actif])
   @@map("extras")
 }
 
 model Formule {
-  id          Int      @id @default(autoincrement())
-  nom         String
-  description String
-  prixHt      Decimal @db.Decimal(10, 2)
-  image_url   String?
-  actif       Boolean  @default(true)
-
-  nombreEmpanadas   Int      // ex: 2, 3, 6, 12 — quota que le client doit remplir
-  nombreExtras      Int      @default(0) // ex: 1 boisson + 1 douceur = 2, ou 1 seul
+  id              Int      @id @default(autoincrement())
+  nom             String
+  description     String
+  prixTtc         Decimal  @db.Decimal(10, 2)   // prix fixe TTC, ex 18.90
+  image_url       String?
+  actif           Boolean  @default(true)
+  nombreEmpanadas Int      // quota d'empanadas à choisir
+  nombreExtras    Int      @default(0)          // quota d'extras à choisir
 
   commandeFormules CommandeFormule[]
 
+  @@index([actif])
   @@map("formules")
 }
 
-/// Table pour définir les restrictions dans les formules
-
-//model FormuleEmpanada {
-//  id         Int      @id @default(autoincrement())
-//  formule    Formule  @relation(fields: [formuleId], references: [id])
-//  formuleId  Int
-//  empanada   Empanada @relation(fields: [empanadaId], references: [id])
-//  empanadaId Int
-//  quantite   Int
-
-//  @@map("formule_empanadas")
-//}
-
-//model FormuleExtra {
-//  id        Int     @id @default(autoincrement())
-//  formule   Formule @relation(fields: [formuleId], references: [id])
-//  formuleId Int
-//  extra     Extra   @relation(fields: [extraId], references: [id])
-//  extraId   Int
-//  quantite  Int
-
-//  @@map("formule_extras")
-//}
+// --- Clients / admin ---
 
 model Utilisateur {
-  id           Int             @id @default(autoincrement())
-  nom          String
-  email        String          @unique
-  motDePasse   String
-  role         RoleUtilisateur @default(EMPLOYE)
-  creeLe       DateTime        @default(now())
+  id         Int             @id @default(autoincrement())
+  nom        String
+  email      String          @unique
+  motDePasse String
+  role       RoleUtilisateur @default(EMPLOYE)
+  creeLe     DateTime        @default(now())
 
   @@map("utilisateurs")
 }
 
 model Client {
-  id              Int       @id @default(autoincrement())
-  nom             String
-  email           String    @unique
-  motDePasse      String
-  telephone       String?
-  pointsFidelite  Int       @default(0)
-  creeLe          DateTime  @default(now())
+  id             Int      @id @default(autoincrement())
+  nom            String
+  email          String   @unique
+  motDePasse     String
+  telephone      String?
+  pointsFidelite Int      @default(0)
+  creeLe         DateTime @default(now())
 
   commandes Commande[]
 
   @@map("clients")
 }
 
+model StripeEvenement {
+  id       String   @id          // event.id Stripe (evt_...)
+  type     String
+  traiteLe DateTime @default(now())
+
+  @@map("stripe_evenements")
+}
+
+// --- Commandes ---
+
+model CodePromo {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique            // "DORADA10", stocké en majuscules
+  pourcentage   Decimal   @db.Decimal(5, 2)  // 10, 15, 20
+  actif         Boolean   @default(true)
+  dateExpiration DateTime?
+  usagesMax     Int?                          // null = illimité
+  usagesActuels Int       @default(0)
+  creeLe     DateTime  @default(now())
+
+  commandes     Commande[]
+}
+
 model Commande {
-  id                Int              @id @default(autoincrement())
-  reference         String           @unique
-  clientNom         String
-  clientEmail       String
-  clientTelephone   String
-  statut            StatutCommande   @default(EN_ATTENTE)
-  modeRecuperation  ModeRecuperation
-  adresseLivraison  String?          // rempli seulement si LIVRAISON
-  dateSouhaitee     DateTime
-  creeLe            DateTime         @default(now())
+  id               Int              @id @default(autoincrement())
+  reference        String           @unique
+  clientNom        String
+  clientEmail      String
+  clientTelephone  String
+  statut           StatutCommande   @default(EN_ATTENTE_PAIEMENT)
+  modeRecuperation ModeRecuperation
+  adresseLivraison String?
+  dateSouhaitee    DateTime
+  creeLe           DateTime         @default(now())
 
-  client            Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  clientId          Int?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId Int?
 
-  totalHt   Decimal @db.Decimal(10, 2)
-  totalTva  Decimal @db.Decimal(10, 2)
-  totalTtc  Decimal @db.Decimal(10, 2)
+  // Source de vérité des montants : toujours la somme des lignes, calculée côté serveur
+  totalHt  Decimal @db.Decimal(10, 2)
+  totalTva Decimal @db.Decimal(10, 2)
+  totalTtc Decimal @db.Decimal(10, 2)
 
-  empanadas CommandeEmpanada[]
-  extras    CommandeExtra[]
-  formules  CommandeFormule[]
+  empanadas      CommandeEmpanada[]   // empanadas à l'unité (hors formule)
+  extras         CommandeExtra[]      // extras à l'unité (hors formule)
+  formules       CommandeFormule[]
+  remboursements Remboursement[]
+
+  stripeSessionId       String?   @unique
+  stripePaymentIntentId String?
+  payeeLe               DateTime?
+
+  codePromoId   Int?
+  codePromo     CodePromo? @relation(fields: [codePromoId], references: [id])
+  codePromoFige String?                       // snapshot du code, comme ton nomFige
+  remisePourcent Decimal?  @db.Decimal(5, 2)
+  remiseTtc     Decimal   @default(0) @db.Decimal(10, 2)
 
   @@index([statut, dateSouhaitee])
   @@index([clientId])
-
   @@map("commandes")
 }
 
-// Chaque ligne = une empanada commandée à l'unité (hors formule)
-model CommandeEmpanada {
-  id            Int      @id @default(autoincrement())
-  commande      Commande @relation(fields: [commandeId], references: [id])
-  commandeId    Int
-  empanada      Empanada @relation(fields: [empanadaId], references: [id])
-  empanadaId    Int
-  quantite      Int
-  prixUnitaireHt Decimal  @db.Decimal(10, 2)  // obligatoire, plus de "?"
-  tauxTva        Decimal  @db.Decimal(4, 2)   // obligatoire
+// Une formule commandée (prix fixe + suppléments)
+model CommandeFormule {
+  id              Int      @id @default(autoincrement())
+  commande        Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  commandeId      Int
+  formule         Formule  @relation(fields: [formuleId], references: [id])
+  formuleId       Int
+  quantite        Int
+  nomFige         String
+  prixUnitaireTtc Decimal  @db.Decimal(10, 2)  // prix fixe + suppléments, par unité
+  totalHt         Decimal  @db.Decimal(10, 2)
+  totalTva        Decimal  @db.Decimal(10, 2)
+  totalTtc        Decimal  @db.Decimal(10, 2)
 
-  commandeFormule CommandeFormule? @relation(fields: [commandeFormuleId], references: [id])
+  empanadasChoisies CommandeEmpanada[]
+  extrasChoisies    CommandeExtra[]
+
+  @@index([commandeId])
+  @@map("commande_formules")
+}
+
+// Une ligne = une empanada à l'unité (commandeFormuleId null) ou un choix de formule (quantite = 1)
+model CommandeEmpanada {
+  id                Int      @id @default(autoincrement())
+  commande          Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  commandeId        Int
+  empanada          Empanada @relation(fields: [empanadaId], references: [id])
+  empanadaId        Int
+  quantite          Int
+  nomFige           String
+  prixUnitaireHt    Decimal  @db.Decimal(10, 2)
+  tauxTva           Decimal  @db.Decimal(4, 2)
+  supplementTtc     Decimal  @default(0) @db.Decimal(10, 2)
+  totalHt           Decimal  @db.Decimal(10, 2)
+  totalTva          Decimal  @db.Decimal(10, 2)
+  totalTtc          Decimal  @db.Decimal(10, 2)
+
+  commandeFormule   CommandeFormule? @relation(fields: [commandeFormuleId], references: [id], onDelete: Cascade)
   commandeFormuleId Int?
 
+  @@index([commandeId])
+  @@index([commandeFormuleId])
   @@map("commande_empanadas")
 }
 
 model CommandeExtra {
-  id            Int      @id @default(autoincrement())
-  commande      Commande @relation(fields: [commandeId], references: [id])
-  commandeId    Int
-  extra         Extra    @relation(fields: [extraId], references: [id])
-  extraId       Int
-  quantite      Int
-  prixUnitaireHt Decimal  @db.Decimal(10, 2)  // obligatoire, plus de "?"
-  tauxTva        Decimal  @db.Decimal(4, 2)   // obligatoire
+  id                Int      @id @default(autoincrement())
+  commande          Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  commandeId        Int
+  extra             Extra    @relation(fields: [extraId], references: [id])
+  extraId           Int
+  quantite          Int
+  nomFige           String
+  prixUnitaireHt    Decimal  @db.Decimal(10, 2)
+  tauxTva           Decimal  @db.Decimal(4, 2)
+  supplementTtc     Decimal  @default(0) @db.Decimal(10, 2)
+  totalHt           Decimal  @db.Decimal(10, 2)
+  totalTva          Decimal  @db.Decimal(10, 2)
+  totalTtc          Decimal  @db.Decimal(10, 2)
 
-  commandeFormule    CommandeFormule? @relation(fields: [commandeFormuleId], references: [id])
-  commandeFormuleId  Int?
+  commandeFormule   CommandeFormule? @relation(fields: [commandeFormuleId], references: [id], onDelete: Cascade)
+  commandeFormuleId Int?
 
+  @@index([commandeId])
+  @@index([commandeFormuleId])
   @@map("commande_extras")
 }
 
-// Chaque ligne = une formule commandée
-model CommandeFormule {
-  id            Int      @id @default(autoincrement())
-  commande      Commande @relation(fields: [commandeId], references: [id])
-  commandeId    Int
-  formule       Formule  @relation(fields: [formuleId], references: [id])
-  formuleId     Int
-  quantite      Int
-  prixUnitaireHt Decimal  @db.Decimal(10, 2)  // obligatoire, plus de "?"
+// --- Remboursements ---
 
-  empanadasChoisies CommandeEmpanada[] // les empanadas de CETTE formule commandée
-  extrasChoisis     CommandeExtra[]
+model Remboursement {
+  id             Int                 @id @default(autoincrement())
+  commande       Commande            @relation(fields: [commandeId], references: [id])
+  commandeId     Int
+  montant        Decimal             @db.Decimal(10, 2)
+  motif          MotifRemboursement
+  commentaire    String?
+  statut         StatutRemboursement @default(EN_COURS)
+  stripeRefundId String?             @unique
+  idempotencyKey String              @unique @default(uuid())
+  demandeParId   Int
+  demandeParNom  String
+  creeLe         DateTime            @default(now())
+  traiteLe       DateTime?
 
-  @@map("commande_formules")
+  @@index([commandeId])
+  @@map("remboursements")
 }

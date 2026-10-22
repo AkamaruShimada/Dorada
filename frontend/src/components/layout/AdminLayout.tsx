@@ -32,6 +32,7 @@ function AdminLayout() {
                 <NavLink to="/admin/extras">Extras</NavLink>
                 <NavLink to="/admin/formules">Formules</NavLink>
                 <NavLink to="/admin/commandes">Commandes</NavLink>
+                <NavLink to="/admin/codes-promo">Codes Promo</NavLink>
             </nav>
 
             {/* Bouton Commander (desktop) */}

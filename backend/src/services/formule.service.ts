@@ -4,9 +4,8 @@ import prisma from '../prisma/client';
 import { CreateFormuleInput, UpdateFormuleInput } from "../schemas/formule.schema";
 
 
-export const getAllFormules = async (includeInactive: boolean = false) => {
+export const getAllFormules = async () => {
     return prisma.formule.findMany({
-        where: includeInactive ? {} : { actif: true },
         orderBy: { id: "asc" },
     });
 }

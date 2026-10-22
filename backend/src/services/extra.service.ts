@@ -4,13 +4,8 @@ import prisma from '../prisma/client';
 import { CreateExtraInput, UpdateExtraInput } from '../schemas/extra.schema';
 
 
-/**
- * Récupère toutes les extras actives
- * On ne montre pas celles désactivées (actif: false) par défaut
- */
-export const getAllExtras = async (includeInactive: boolean = false) => {
+export const getAllExtras = async () => {
   return prisma.extra.findMany({
-    where: includeInactive ? {} : { actif: true },
     orderBy: { nom: 'asc' },
   });
 };

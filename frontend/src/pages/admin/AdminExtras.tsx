@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import type { Extra } from '../../types/admin.types';
 import {
-  getAllExtrasAdmin,
+  getAllExtras,
   createExtra,
   updateExtra,
   deleteExtra,
 } from '../../services/admin/extra.service';
 import ExtraForm from '../../components/admin/ExtraForm';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import { calculerTtc, formatPrix } from '../../utils/pricing';
 
 function AdminExtras() {
   const [extras, setExtras] = useState<Extra[]>([]);
@@ -30,7 +31,7 @@ function AdminExtras() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getAllExtrasAdmin();
+      const data = await getAllExtras();
       setExtras(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -157,13 +158,13 @@ function AdminExtras() {
                     </td>
                     <td className="px-4 py-3">{extra.type}</td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
-                      {extra.prixHt.toFixed(2)} €
+                      {formatPrix(extra.prixHt)}
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
                       {extra.tauxTva} %
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
-                      {(extra.prixHt * (1 + (extra.tauxTva / 100))).toFixed(2)} €
+                      {formatPrix(calculerTtc(extra.prixHt, extra.tauxTva))}
                     </td>
                     <td className="px-4 py-3 text-center tabular-nums">
                       {extra.stock}
@@ -224,6 +225,7 @@ function AdminExtras() {
 
       {deleteTarget && (
         <ConfirmModal
+          title='Confirmer la désactivation'
           message={`Désactiver "${deleteTarget.nom}" ? Celui-ci sera notifié comme indisponible au client.`}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}

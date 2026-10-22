@@ -11,7 +11,6 @@ import { upload } from '../middlewares/upload.middleware';
 const router = Router();
 
 router.get('/', extraController.getAllExtras);
-router.get('/admin', authenticate, extraController.getAllExtrasAdmin);
 
 router.get('/:id', extraController.getExtraById);
 router.post('/admin', authenticate, isAdmin, upload.single('image'),  validate(createExtraSchema), extraController.createExtra);

@@ -10,7 +10,6 @@ import { upload } from '../middlewares/upload.middleware';
 const router = Router();
 
 router.get('/', empanadaController.getAllEmpanadas);
-router.get('/admin', authenticate, empanadaController.getAllEmpanadasAdmin);
 
 router.get('/:id', empanadaController.getEmpanadaById);
 router.post('/admin', authenticate, isAdmin, upload.single('image'), validate(createEmpanadaSchema), empanadaController.createEmpanada);

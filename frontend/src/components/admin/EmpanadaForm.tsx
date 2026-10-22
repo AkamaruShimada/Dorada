@@ -15,8 +15,10 @@ function EmpanadaForm({ initialData, onSave, onCancel }: EmpanadaFormProps) {
   const [description, setDescription] = useState(initialData?.description ?? '');
   const {
     prixHt,
-    prixTtc,
     tauxTva,
+    prixHtTexte,
+    prixTtcTexte,
+    tauxTvaTexte,
     handlePrixHtChange,
     handlePrixTtcChange,
     handleTauxTvaChange,
@@ -54,6 +56,11 @@ function handleRemoveImage() {
 
 function handleSubmit(event: React.SubmitEvent) {
   event.preventDefault();
+
+    if (prixHt === null || tauxTva === null) {
+      Error('Le prix HT et le taux de TVA sont obligatoires.'); // adapte à ton état d'erreur
+      return;
+    }
 
   const formData = new FormData();
   formData.append('nom', nom);
@@ -186,10 +193,10 @@ function handleSubmit(event: React.SubmitEvent) {
               </label>
               <input
                 id="empanada-prix-ht"
-                type="number"
-                step="0.01"
-                min="0"
-                value={prixHt}
+                type="text"
+                inputMode='decimal'
+                autoComplete='off'
+                value={prixHtTexte}
                 onChange={(event) => handlePrixHtChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -205,10 +212,10 @@ function handleSubmit(event: React.SubmitEvent) {
               </label>
               <input
                 id="empanada-taux-tva"
-                type="number"
-                step="0.1"
-                min="0"
-                value={tauxTva}
+                type="text"
+                inputMode='decimal'
+                autoComplete='off'
+                value={tauxTvaTexte}
                 onChange={(event) => handleTauxTvaChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -224,10 +231,10 @@ function handleSubmit(event: React.SubmitEvent) {
               </label>
               <input
                 id="empanada-prix-ttc"
-                type="number"
-                step="0.01"
-                min="0"
-                value={prixTtc}
+                type="text"
+                inputMode='decimal'
+                autoComplete='off'
+                value={prixTtcTexte}
                 onChange={(event) => handlePrixTtcChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
