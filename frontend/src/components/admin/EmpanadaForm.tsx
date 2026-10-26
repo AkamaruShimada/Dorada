@@ -10,6 +10,11 @@ interface EmpanadaFormProps {
   onCancel: () => void;
 }
 
+type ImageEtat =
+  | { type: 'inchangee' }              // on garde l'image actuelle (ou aucune)
+  | { type: 'nouvelle'; file: File }   // nouveau fichier choisi
+  | { type: 'supprimee' };             // l'utilisateur a retiré l'image
+
 function EmpanadaForm({ initialData, onSave, onCancel }: EmpanadaFormProps) {
   const [nom, setNom] = useState(initialData?.nom ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
@@ -28,25 +33,23 @@ function EmpanadaForm({ initialData, onSave, onCancel }: EmpanadaFormProps) {
   const [stock, setStock] = useState(initialData?.stock ?? 0);
   const [actif, setActif] = useState(initialData?.actif ?? true);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageEtat, setImageEtat] = useState<ImageEtat>({ type: 'inchangee' });
   const [imagePreview, setImagePreview] = useState<string | null>(
-  initialData?.image_url ?? null);
-  const [imageRemoved, setImageRemoved] = useState(false);
+    initialData?.image_url ?? null,
+  );
   const imageInputRef = useRef<HTMLInputElement>(null);
 
 function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  setImageFile(file);
+  setImageEtat({ type: 'nouvelle', file });
   setImagePreview(URL.createObjectURL(file)); // aperçu local immédiat
-  setImageRemoved(false); // si on choisit un fichier, on ne veut pas supprimer l'image existante
 }
 
 function handleRemoveImage() {
-  setImageFile(null);
+  setImageEtat({ type: 'supprimee' });
   setImagePreview(null);
-  setImageRemoved(true);
 
     // Permet de sélectionner à nouveau le même fichier ensuite.
   if (imageInputRef.current) {
@@ -72,9 +75,16 @@ function handleSubmit(event: React.SubmitEvent) {
   formData.append('stock', stock.toString());
   formData.append('actif', actif.toString());
   
-  formData.append('removeImage', String(imageRemoved));
-  if (imageFile) {
-    formData.append('image', imageFile);
+  switch (imageEtat.type) {
+    case 'nouvelle':
+      formData.append('image', imageEtat.file);
+      break;
+    case 'supprimee':
+      formData.append('removeImage', 'true');
+      break;
+    case 'inchangee':
+      // Rien à envoyer : le backend conserve l'image existante
+      break;
   }
   
   onSave(formData); // le type change : FormData au lieu de EmpanadaPayload

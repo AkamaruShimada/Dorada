@@ -2,6 +2,7 @@
 
 import { Request, Response } from "express";
 import * as formuleService from "../services/formule.service";
+import { deleteImageByUrl, uploadImageBuffer } from "../services/upload.service";
 
 const serializeFormule = (formule: any) => ({
   ...formule,
@@ -41,7 +42,13 @@ export const getFormuleById = async (req: Request, res: Response) => {
 
 export const createFormule = async (req: Request, res: Response) => {
     try {
-        const formule = await formuleService.createFormule(req.body);
+        let imageUrl: String | undefined
+    
+        if(req.file) {
+            imageUrl = await uploadImageBuffer(req.file.buffer, '/Dorada/Formules')
+        }
+        
+        const formule = await formuleService.createFormule({ ...req.body, image_url: imageUrl });
         res.status(201).json(serializeFormule(formule));
     } catch (error) {
         console.error(error);
@@ -57,7 +64,26 @@ export const updateFormule = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Id invalide" });
         }
 
-        const formule = await formuleService.updateFormule(id, req.body);
+        const existingFormule = await formuleService.getFormuleById(id);
+        if (!existingFormule) {
+            return res.status(404).json({ message: 'Formule non trouvée'});
+        }
+    
+        const { removeImage, ...validatedData } = req.body;
+    
+        let imageUrl = existingFormule.image_url
+    
+        if (req.file) {
+            if (imageUrl) {
+            await deleteImageByUrl(imageUrl);
+            }
+            imageUrl = await uploadImageBuffer(req.file.buffer, '/Dorada/Formules');
+        }else if (removeImage && imageUrl) {
+            await deleteImageByUrl(imageUrl)
+            imageUrl = null;
+        }
+        
+        const formule = await formuleService.updateFormule(id, { ...validatedData, image_url: imageUrl});
         res.status(200).json(serializeFormule(formule));
     } catch (error) {
         console.error(error);

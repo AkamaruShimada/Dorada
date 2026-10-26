@@ -10,13 +10,20 @@ interface ExtraFormProps {
   onCancel: () => void;
 }
 
+type ImageEtat =
+  | { type: 'inchangee' }              // on garde l'image actuelle (ou aucune)
+  | { type: 'nouvelle'; file: File }   // nouveau fichier choisi
+  | { type: 'supprimee' };             // l'utilisateur a retiré l'image
+
 function ExtraForm({ initialData, onSave, onCancel }: ExtraFormProps) {
   const [nom, setNom] = useState(initialData?.nom ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
   const {
     prixHt,
-    prixTtc,
     tauxTva,
+    prixHtTexte,
+    prixTtcTexte,
+    tauxTvaTexte,
     handlePrixHtChange,
     handlePrixTtcChange,
     handleTauxTvaChange,
@@ -26,25 +33,23 @@ function ExtraForm({ initialData, onSave, onCancel }: ExtraFormProps) {
   const [stock, setStock] = useState(initialData?.stock ?? 0);
   const [actif, setActif] = useState(initialData?.actif ?? true);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageEtat, setImageEtat] = useState<ImageEtat>({ type: 'inchangee' });
   const [imagePreview, setImagePreview] = useState<string | null>(
-  initialData?.image_url ?? null);
-  const [imageRemoved, setImageRemoved] = useState(false);
+    initialData?.image_url ?? null,
+  );
   const imageInputRef = useRef<HTMLInputElement>(null);
 
 function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  setImageFile(file);
+  setImageEtat({ type: 'nouvelle', file });
   setImagePreview(URL.createObjectURL(file)); // aperçu local immédiat
-  setImageRemoved(false); // si on choisit un fichier, on ne veut pas supprimer l'image existante
 }
 
 function handleRemoveImage() {
-  setImageFile(null);
+  setImageEtat({ type: 'supprimee' });
   setImagePreview(null);
-  setImageRemoved(true);
 
     // Permet de sélectionner à nouveau le même fichier ensuite.
   if (imageInputRef.current) {
@@ -54,6 +59,11 @@ function handleRemoveImage() {
 
 function handleSubmit(event: React.SubmitEvent) {
   event.preventDefault();
+
+      if (prixHt === null || tauxTva === null) {
+      Error('Le prix HT et le taux de TVA sont obligatoires.'); // adapte à ton état d'erreur
+      return;
+    }
 
   const formData = new FormData();
   formData.append('nom', nom);
@@ -65,9 +75,16 @@ function handleSubmit(event: React.SubmitEvent) {
   formData.append('stock', stock.toString());
   formData.append('actif', actif.toString());
   
-  formData.append('removeImage', String(imageRemoved));
-  if (imageFile) {
-    formData.append('image', imageFile);
+  switch (imageEtat.type) {
+    case 'nouvelle':
+      formData.append('image', imageEtat.file);
+      break;
+    case 'supprimee':
+      formData.append('removeImage', 'true');
+      break;
+    case 'inchangee':
+      // Rien à envoyer : le backend conserve l'image existante
+      break;
   }
   
   onSave(formData); // le type change : FormData au lieu de ExtraPayload
@@ -185,10 +202,10 @@ function handleSubmit(event: React.SubmitEvent) {
               </label>
               <input
                 id="extra-prix-ht"
-                type="number"
-                step="0.01"
-                min="0"
-                value={prixHt}
+                type="text"
+                inputMode='decimal'
+                autoComplete='off'
+                value={prixHtTexte}
                 onChange={(event) => handlePrixHtChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -204,10 +221,10 @@ function handleSubmit(event: React.SubmitEvent) {
               </label>
               <input
                 id="extra-taux-tva"
-                type="number"
-                step="0.1"
-                min="0"
-                value={tauxTva}
+                type="text"
+                inputMode='decimal'
+                autoComplete='off'
+                value={tauxTvaTexte}
                 onChange={(event) => handleTauxTvaChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -223,10 +240,10 @@ function handleSubmit(event: React.SubmitEvent) {
               </label>
               <input
                 id="extra-prix-ttc"
-                type="number"
-                step="0.01"
-                min="0"
-                value={prixTtc}
+                type="text"
+                inputMode='decimal'
+                autoComplete='off'
+                value={prixTtcTexte}
                 onChange={(event) => handlePrixTtcChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"

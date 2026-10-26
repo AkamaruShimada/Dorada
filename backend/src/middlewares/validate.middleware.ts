@@ -16,6 +16,7 @@ export const validate = (schema: z.ZodType) => {
 
     if (!result.success) {
       return res.status(400).json({
+        message: 'Données invalides',
         erreurs: z.flattenError(result.error).fieldErrors,
       });
     }

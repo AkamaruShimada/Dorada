@@ -76,16 +76,7 @@ export const updateExtra = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Extra non trouvé'});
     }
 
-    const parseResult = updateExtraSchema.safeParse(req.body);
-
-    if (!parseResult.success) {
-      return res.status(400).json({
-        message: 'Données invalides',
-        errors: parseResult.error.flatten().fieldErrors,
-      });
-    }
-
-    const { removeImage, ...validatedData } = parseResult.data;
+    const { removeImage, ...validatedData } = req.body;
 
     let imageUrl = existingExtra.image_url
 

@@ -18,7 +18,10 @@ export const createFormule = async (data: CreateFormuleInput) => {
     return prisma.formule.create({ data });
 }
 
-export const updateFormule = async (id: number, data: UpdateFormuleInput) => {
+export const updateFormule = async (
+    id: number, 
+    data: UpdateFormuleInput & { image_url?: string | null}
+) => {
     return prisma.formule.update({ where: { id }, data });
 }
 

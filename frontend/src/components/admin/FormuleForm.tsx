@@ -9,6 +9,11 @@ interface FormuleFormProps {
   onCancel: () => void;
 }
 
+type ImageEtat =
+  | { type: 'inchangee' }              // on garde l'image actuelle (ou aucune)
+  | { type: 'nouvelle'; file: File }   // nouveau fichier choisi
+  | { type: 'supprimee' };             // l'utilisateur a retiré l'image
+
 function FormuleForm({ initialData, onSave, onCancel }: FormuleFormProps) {
   const [nom, setNom] = useState(initialData?.nom ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
@@ -17,24 +22,23 @@ function FormuleForm({ initialData, onSave, onCancel }: FormuleFormProps) {
   const [nombreExtras, setNombreExtras] = useState(initialData?.nombreExtras ?? 0);
   const [actif, setActif] = useState(initialData?.actif ?? true);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url ?? null,);
-  const [imageRemoved, setImageRemoved] = useState(false);
+  const [imageEtat, setImageEtat] = useState<ImageEtat>({ type: 'inchangee' });
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialData?.image_url ?? null,
+  );
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setImageFile(file);
+    setImageEtat({ type: 'nouvelle', file });
     setImagePreview(URL.createObjectURL(file));
-    setImageRemoved(false);
   }
 
   function handleRemoveImage() {
-    setImageFile(null);
+    setImageEtat({ type: 'supprimee' });
     setImagePreview(null);
-    setImageRemoved(true);
 
     if (imageInputRef.current) {
       imageInputRef.current.value = '';
@@ -52,9 +56,16 @@ function FormuleForm({ initialData, onSave, onCancel }: FormuleFormProps) {
     formData.append('nombreExtras', nombreExtras.toString());
     formData.append('actif', actif.toString());
 
-    formData.append('removeImage', String(imageRemoved));
-    if (imageFile) {
-      formData.append('image', imageFile);
+    switch (imageEtat.type) {
+      case 'nouvelle':
+        formData.append('image', imageEtat.file);
+        break;
+      case 'supprimee':
+        formData.append('removeImage', 'true');
+        break;
+      case 'inchangee':
+        // Rien à envoyer : le backend conserve l'image existante
+        break;
     }
 
     onSave(formData);

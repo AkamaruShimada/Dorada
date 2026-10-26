@@ -75,16 +75,7 @@ export const updateEmpanada = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Empanada non trouvée' });
     }
 
-    // On valide et on coerce req.body AVANT de toucher à Prisma
-    const parseResult = updateEmpanadaSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({
-        message: 'Données invalides',
-        errors: parseResult.error.flatten().fieldErrors,
-      });
-    }
-
-    const { removeImage, ...validatedData } = parseResult.data;
+    const { removeImage, ...validatedData } = req.body;
 
     let imageUrl = existingEmpanada.image_url;
 

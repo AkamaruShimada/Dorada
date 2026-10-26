@@ -2,12 +2,14 @@
 
 import type Stripe from 'stripe';
 import prisma from '../prisma/client';
+import { envoyerConfirmationCommande } from './email.service';
+import { calculerTtcUnitaire } from '../utils/pricing';
 
 export const traiterPaiementReussi = async (
   eventId: string,
   session: Stripe.Checkout.Session,
 ) => {
-  await prisma.$transaction(async (tx) => {
+  const commandeValidee = await prisma.$transaction(async (tx) => {
     // Idempotence : Stripe peut envoyer le même événement plusieurs fois
     const dejaTraite = await tx.stripeEvenement.findUnique({ where: { id: eventId } });
     if (dejaTraite) return;
@@ -57,7 +59,7 @@ export const traiterPaiementReussi = async (
       });
     }
 
-    await tx.commande.update({
+    const commandeMaj = await tx.commande.update({
       where: { id: commande.id },
       data: {
         statut: 'VALIDEE',
@@ -68,7 +70,78 @@ export const traiterPaiementReussi = async (
     });
 
     await tx.stripeEvenement.create({ data: { id: eventId, type: 'checkout.session.completed' } });
+
+    // On recharge la commande avec ses lignes pour le mail
+    return tx.commande.findUnique({
+      where: { id: commande.id },
+      include: {
+        empanadas: { include: { empanada: true } },
+        extras: { include: { extra: true } },
+        formules: {
+          include: {
+            formule: true,
+            empanadasChoisies: { include: { empanada: true } },
+            extrasChoisies: { include: { extra: true } },
+          },
+        },
+      },
+    });
+
   });
+
+  // Hors transaction : un échec d'envoi n'annule pas le paiement
+  if (commandeValidee) {
+
+    const lignesEmpanadas = commandeValidee.empanadas
+      .filter((l) => l.commandeFormuleId === null)
+      .map((l) => ({
+        nom: l.empanada.nom,
+        quantite: l.quantite,
+        prixUnitaire: Number(calculerTtcUnitaire(l.prixUnitaireHt, l.empanada.tauxTva)),
+        details: [] as string[],
+      }));
+
+    const lignesExtras = commandeValidee.extras
+      .filter((l) => l.commandeFormuleId === null)
+      .map((l) => ({
+        nom: l.extra.nom,
+        quantite: l.quantite,
+        prixUnitaire: Number(calculerTtcUnitaire(l.prixUnitaireHt, l.extra.tauxTva)),
+        details: [] as string[],
+      }));
+
+    const lignesFormules = commandeValidee.formules.map((f) => ({
+      nom: f.formule.nom,
+      quantite: f.quantite,
+      prixUnitaire: Number(f.prixUnitaireTtc),
+      details: [
+        ...f.empanadasChoisies.map((e) => e.empanada.nom),
+        ...f.extrasChoisies.map((e) => e.extra.nom),
+      ],
+    }));
+
+    const lignes = [...lignesFormules, ...lignesEmpanadas, ...lignesExtras];
+
+    envoyerConfirmationCommande(commandeValidee.clientEmail, {
+      reference: commandeValidee.reference,
+      nom: commandeValidee.clientNom,
+      lignes,
+      sousTotal: Number(commandeValidee.totalTtc) + Number(commandeValidee.remiseTtc),
+      reduction: Number(commandeValidee.remiseTtc) > 0 ? Number(commandeValidee.remiseTtc) : undefined,
+      totalTtc: Number(commandeValidee.totalTtc),
+      modeRecuperation:
+        commandeValidee.modeRecuperation === 'LIVRAISON' ? 'Livraison' : 'Retrait sur place',
+      dateRecuperation: commandeValidee.dateSouhaitee
+        ? new Date(commandeValidee.dateSouhaitee).toLocaleString('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : undefined,
+    }).catch((err) => console.error('Échec envoi mail confirmation', err));
+  }
 };
 
 export const traiterSessionExpiree = async (
