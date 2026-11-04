@@ -190,6 +190,7 @@ model Commande {
 
   stripeSessionId       String?   @unique
   stripePaymentIntentId String?
+  moyenPaiement         String?
   payeeLe               DateTime?
 
   codePromoId   Int?

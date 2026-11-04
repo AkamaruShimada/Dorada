@@ -9,6 +9,7 @@ import formuleRoutes from './routes/formule.routes';
 import commandeRoutes from './routes/commande.routes'
 import authRoutes from './routes/auth.routes';
 import codePromoRoutes from './routes/codePromo.routes'
+import rapportRoutes from './routes/rapport.routes';
 
 import cookieParser from 'cookie-parser';
 import { stripeWebhookHandler } from './controllers/stripe.controller';
@@ -45,6 +46,8 @@ app.use('/api/formules', formuleRoutes);
 app.use('/api/commandes', commandeRoutes)
 // Utilise les routes des code Promo
 app.use('/api/codes-promo', codePromoRoutes);
+
+app.use('/api/rapports', rapportRoutes);
 
 // Utilise l'authentification et la gestion des utilisateurs
 app.use('/api/auth', authRoutes);

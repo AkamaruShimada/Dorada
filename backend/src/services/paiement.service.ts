@@ -1,6 +1,7 @@
 // backend/src/services/paiement.service.ts
 
 import type Stripe from 'stripe';
+import { stripe } from '../config/stripe';
 import prisma from '../prisma/client';
 import { envoyerConfirmationCommande } from './email.service';
 import { calculerTtcUnitaire } from '../utils/pricing';
@@ -59,6 +60,8 @@ export const traiterPaiementReussi = async (
       });
     }
 
+    const moyenPaiement = await recupererMoyenPaiement(session);
+
     const commandeMaj = await tx.commande.update({
       where: { id: commande.id },
       data: {
@@ -66,6 +69,7 @@ export const traiterPaiementReussi = async (
         payeeLe: new Date(),
         stripePaymentIntentId:
           typeof session.payment_intent === 'string' ? session.payment_intent : null,
+        moyenPaiement 
       },
     });
 
@@ -153,3 +157,20 @@ export const traiterSessionExpiree = async (
     data: { statut: 'EXPIREE' },
   });
 };
+
+async function recupererMoyenPaiement(session: Stripe.Checkout.Session): Promise<string | null> {
+  if (typeof session.payment_intent !== 'string') return null;
+
+  const intent = await stripe.paymentIntents.retrieve(session.payment_intent, {
+    expand: ['payment_method'],
+  });
+
+  const pm = intent.payment_method as Stripe.PaymentMethod | null;
+  if (!pm) return null;
+
+  // Ex : "card" -> carte VISA, "klarna", "link", "bancontact"...
+  if (pm.type === 'card' && pm.card) {
+    return `Carte ${pm.card.brand.toUpperCase()}`; // "Carte VISA"
+  }
+  return pm.type; // "klarna", "link", "bancontact", etc.
+}

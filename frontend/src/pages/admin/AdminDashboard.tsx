@@ -6,6 +6,8 @@ import { getStatsJour, type StatsJour } from '../../services/admin/commande.serv
 import CommandesTable from '../../components/admin/CommandesTable';
 import CommandeDetailModal from '../../components/admin/CommandeDetailModal';
 import RemboursementModal from '../../components/admin/RemboursementModal';
+import RapportModal from '../../components/admin/RapportModal';
+import type { TypeRapport } from '../../services/admin/rapport.service';
 
 const ONGLETS: { statut: StatutCommande; titre: string }[] = [
   { statut: 'VALIDEE', titre: 'À préparer' },
@@ -28,6 +30,7 @@ function AdminDashboard() {
   const [detailTarget, setDetailTarget] = useState<Commande | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [refundTarget, setRefundTarget] = useState<Commande | null>(null);
+  const [rapportType, setRapportType] = useState<TypeRapport | null>(null);
 
   useEffect(() => {
     getStatsJour()
@@ -47,9 +50,21 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-surface p-4 text-primary sm:p-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Tableau de bord</h1>
-          <p className="mt-1 text-sm opacity-70">Vue d'ensemble de ton activité du jour.</p>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Tableau de bord</h1>
+            <p className="mt-1 text-sm opacity-70">Vue d'ensemble de ton activité du jour.</p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setRapportType('hebdomadaire')}
+              className="rounded-lg border border-primary/20 px-4 py-2.5 text-sm font-semibold transition hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              Rapport
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -116,6 +131,13 @@ function AdminDashboard() {
               setRefundTarget(null);
               setRefreshKey((k) => k + 1); // recharge tableau, compteurs et stats
             }}
+          />
+        )}
+
+        {rapportType && (
+          <RapportModal 
+            typeInitial={rapportType} 
+            onClose={() => setRapportType(null)} 
           />
         )}
       </div>

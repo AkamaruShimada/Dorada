@@ -131,6 +131,9 @@ function CommandesTable({ statut, titre, refreshKey = 0, onSelect, onStatusUpdat
                     </td>
                     <td className="px-4 py-3 tabular-nums">{formatDate(c.dateSouhaitee)}</td>
                     <td className="px-4 py-3 tabular-nums">{formatDate(c.creeLe)}</td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums">
+                      <PrixAvecRemise commande={c} />
+                    </td>
                     {afficherColonneCodePromo && (
                         <td className="px-4 py-3 text-center">
                             {c.codePromoFige ? (
@@ -143,9 +146,6 @@ function CommandesTable({ statut, titre, refreshKey = 0, onSelect, onStatusUpdat
                             )}
                         </td>
                     )}
-                    <td className="px-4 py-3 text-right font-medium tabular-nums">
-                    <PrixAvecRemise commande={c} />
-                    </td>
                     {afficherColonneRemboursement && (
                       <td className="px-4 py-3 text-right font-medium tabular-nums" >
                         {(c.remboursements?.length ?? 0) > 0 ? (
