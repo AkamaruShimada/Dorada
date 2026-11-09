@@ -115,9 +115,6 @@ function AdminExtras() {
                   <th scope="col" className="px-4 py-3 font-semibold">
                     Nom
                   </th>
-                  <th scope="col" className="px-4 py-3 font-semibold">
-                    Type
-                  </th>
                   <th scope="col" className="px-4 py-3 text-right font-semibold">
                     Prix HT
                   </th>
@@ -126,6 +123,9 @@ function AdminExtras() {
                   </th>
                   <th scope="col" className="px-4 py-3 text-right font-semibold">
                     Prix TTC
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">
+                    Supplément Formule TTC
                   </th>
                   <th scope="col" className="px-4 py-3 text-center font-semibold">
                     Stock
@@ -156,7 +156,6 @@ function AdminExtras() {
                     <td className="px-4 py-3 font-medium">
                       {extra.nom}
                     </td>
-                    <td className="px-4 py-3">{extra.type}</td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
                       {formatPrix(extra.prixHt)}
                     </td>
@@ -165,6 +164,9 @@ function AdminExtras() {
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
                       {formatPrix(calculerTtc(extra.prixHt, extra.tauxTva))}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums">
+                      {"+" + formatPrix(extra.supplementFormuleTtc)}
                     </td>
                     <td className="px-4 py-3 text-center tabular-nums">
                       {extra.stock}

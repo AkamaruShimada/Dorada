@@ -11,13 +11,14 @@ interface CommandeDetailModalProps {
   onCancel: () => void;
 }
 
-function Lignes({ titre, lignes }: { titre: string; lignes: LigneCommande[] }) {
-  if (lignes.length === 0) return null;
+function Lignes({ titre, lignes }: { titre: string; lignes?: LigneCommande[] }) {
+  const visibles = (lignes ?? []).filter((l) => l.commandeFormuleId == null);
+  if (visibles.length === 0) return null;
   return (
     <div>
       <h3 className="mb-2 text-sm font-semibold">{titre}</h3>
       <ul className="divide-y divide-primary/10 rounded-lg border border-primary/10">
-        {lignes.filter((l) => l.commandeFormuleId == null).map((l) => (
+        {visibles.map((l) => (
           <li key={l.id} className="flex justify-between gap-4 px-3 py-2 text-sm">
             <span>
               {l.quantite} × {l.nomFige}
@@ -86,6 +87,7 @@ function CommandeDetailModal({
 
           <Lignes titre="Empanadas" lignes={commande.empanadas} />
           <Lignes titre="Extras" lignes={commande.extras} />
+          <Lignes titre="Boissons" lignes={commande.boissons} />
 
           {commande.formules.map((f) => (
             <div key={f.id} className="rounded-lg border border-primary/10 p-3">
@@ -94,11 +96,15 @@ function CommandeDetailModal({
                 <span className="tabular-nums">{formatPrix(f.totalTtc)}</span>
               </div>
               <ul className="mt-2 space-y-1 pl-3 text-sm opacity-80">
-                {[...f.empanadasChoisies, ...f.extrasChoisies].map((l) => (
-                  <li key={`${l.empanada ? 'emp' : 'ext'}-${l.id}`}>
+                {[
+                  ...(f.empanadasChoisies ?? []),
+                  ...(f.extrasChoisies ?? []),
+                  ...(f.boissonsChoisies ?? [])
+                ].map((l) => (
+                  <li key={`${l.empanada ? 'emp' : l.extra ? 'ext' : 'bois'}-${l.id}`}>
                     <div className="flex justify-between gap-4 text-sm">
-                      <span>{l.quantite} × {l.nomFige}</span>
-                      <span className="tabular-nums">{formatPrix(l.totalTtc)} TTC</span>
+                      <span>{l.quantite} × {l.nomFige} {l.supplementTtc ? `(+${formatPrix(l.supplementTtc)} TTC)` : ''}</span>
+                      <span className="tabular-nums">{formatPrix(l.totalTtc - (l.supplementTtc || 0) * l.quantite)} TTC</span>
                     </div>
                   </li>
                 ))}

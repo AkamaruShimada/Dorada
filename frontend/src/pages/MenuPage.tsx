@@ -1,12 +1,19 @@
+// frontend/src/pages/MenuPage.tsx
+
+import { useMemo } from 'react';
 import type { Empanada } from '../types/admin.types';
 import { useCart } from '../contexts/CartContext';
 import { useMenu } from '../hooks/useMenu';
 import useCleanCart from '../hooks/useCleanCart';
 
 import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
 import EmpanadaSection from '../components/menu/EmpanadaSection';
 import ExtraSection from '../components/menu/ExtraSection';
+import BoissonSection from '../components/menu/BoissonSection';
 import FormuleSection from '../components/menu/FormuleSection';
+
+import { reservationsPanier, stockVendableCategorie } from '../utils/stock';
 
 const TYPE_LABELS: Record<Empanada['type'], string> = {
   SALEE: 'Salées',
@@ -21,6 +28,8 @@ function MenuPage() {
   const { items, addItem, addFormule } = useCart();
 
   useCleanCart(catalogue);
+
+  const reservations = useMemo(() => reservationsPanier(items), [items]);
 
   if (isLoading) return <p className="p-6">Chargement du menu...</p>;
 
@@ -37,9 +46,15 @@ function MenuPage() {
 
   if (!catalogue) return null;
 
-  const { empanadas, extras, formules } = catalogue;
+  const { empanadas, extras, boissons, formules } = catalogue;
 
-  const quantiteDans = (kind: 'empanada' | 'extra', id: number) =>
+  const stocks = {
+    empanadas: stockVendableCategorie(empanadas, 'empanadas', reservations),
+    extras: stockVendableCategorie(extras, 'extras', reservations),
+    boissons: stockVendableCategorie(boissons, 'boissons', reservations),
+  };
+
+  const quantiteDans = (kind: 'empanada' | 'extra' | 'boisson' | 'formule', id: number) =>
     items.find((i) => i.kind === kind && i.id === id)?.quantite ?? 0;
 
   const groupesParType = ORDRE_TYPES.map((type) => ({
@@ -64,7 +79,11 @@ function MenuPage() {
             formules={formules}
             empanadas={empanadas}
             extras={extras}
-            onAdd={({ formule, empanadas: choixEmpanadas, extras: choixExtras }) =>
+            boissons={boissons}
+            stocks={stocks}
+            reservations={reservations}
+            quantiteDansPanier={(id) => quantiteDans('formule', id)}
+            onAdd={({ formule, empanadas: choixEmpanadas, extras: choixExtras, boissons: choixBoissons }) =>
               addFormule({
                 kind: 'formule',
                 id: formule.id,
@@ -74,8 +93,10 @@ function MenuPage() {
                 prixTtc: formule.prixTtc,
                 nombreEmpanadas: formule.nombreEmpanadas,
                 nombreExtras: formule.nombreExtras,
-                empanadasChoisies: choixEmpanadas.map((p) => ({ id: p.id, nom: p.nom })),
-                extrasChoisis: choixExtras.map((p) => ({ id: p.id, nom: p.nom })),
+                nombreBoissons: formule.nombreBoissons,
+                empanadasChoisies: choixEmpanadas.map((p) => ({ id: p.id, nom: p.nom, supplementFormuleTtc: p.supplementFormuleTtc })),
+                extrasChoisis: choixExtras.map((p) => ({ id: p.id, nom: p.nom, supplementFormuleTtc: p.supplementFormuleTtc })),
+                boissonsChoisies: choixBoissons.map((p) => ({ id: p.id, nom: p.nom, supplementFormuleTtc: p.supplementFormuleTtc })),
               })
             }
           />
@@ -85,6 +106,7 @@ function MenuPage() {
               key={groupe.type}
               typeLabel={TYPE_LABELS[groupe.type]}
               empanadas={groupe.empanadas}
+              reservations={reservations}
               quantiteDansPanier={(id) => quantiteDans('empanada', id)}
               onAdd={(empanada) =>
                 addItem({
@@ -103,6 +125,7 @@ function MenuPage() {
 
           <ExtraSection
             extras={extras}
+            reservations={reservations}
             quantiteDansPanier={(id) => quantiteDans('extra', id)}
             onAdd={(extra) =>
               addItem({
@@ -117,8 +140,29 @@ function MenuPage() {
               })
             }
           />
+
+          <BoissonSection
+            boissons={boissons}
+            reservations={reservations}
+            quantiteDansPanier={(id) => quantiteDans('boisson', id)}
+            onAdd={(boisson) =>
+              addItem({
+                kind: 'boisson',
+                id: boisson.id,
+                nom: boisson.nom,
+                description: boisson.description,
+                prixHt: boisson.prixHt,
+                tauxTva: boisson.tauxTva,
+                imageUrl: boisson.image_url,
+                stock: boisson.stock,
+              })
+            }
+          />
+          
         </div>
       </main>
+    
+      <Footer />
     </>
   );
 }

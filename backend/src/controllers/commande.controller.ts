@@ -20,6 +20,10 @@ const serializeFormule = (f: any) => ({
     id: e.extra?.id ?? e.extraId,
     nom: e.extra?.nom,
   })),
+  boissons: f.boissons?.map((b: any) => ({
+    id : b.boisson?.id ?? b.boissonId,
+    nom: b.boisson?.nom,
+  }))
 });
 
 const serializeCommande = (commande: any) => ({
@@ -38,6 +42,11 @@ const serializeCommande = (commande: any) => ({
     tauxTva: Number(l.tauxTva),
   })),
   extras: commande.extras?.map((l: any) => ({
+    ...l,
+    prixUnitaireHt: Number(l.prixUnitaireHt),
+    tauxTva: Number(l.tauxTva),
+  })),
+  boissons: commande.boissons?.map((l: any) => ({
     ...l,
     prixUnitaireHt: Number(l.prixUnitaireHt),
     tauxTva: Number(l.tauxTva),
@@ -72,6 +81,11 @@ const serializeCommandePublique = (commande: any) => {
       quantite: l.quantite,
       prixUnitaireHt: l.prixUnitaireHt,
     })),
+    boissons: c.boissons?.map((l: any) => ({
+      nom: l.boisson?.nom,
+      quantite: l.quantite,
+      prixUnitaireHt: l.prixUnitaireHt,
+    })),
     formules: c.formules?.map((f: any) => ({
       formule: f.formuleId,
       nom: f.nom,
@@ -79,6 +93,7 @@ const serializeCommandePublique = (commande: any) => {
       prixUnitaireTtc: f.prixUnitaireTtc,
       empanadas: f.empanadas?.map((e: any) => e.nom),
       extras: f.extras?.map((e: any) => e.nom),
+      boissons: f.boissons?.map((e: any) => e.nom),
     })),
   };
 };

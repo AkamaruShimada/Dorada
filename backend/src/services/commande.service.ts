@@ -15,7 +15,7 @@ export class CommandeError extends Error {
 
 // ---------- Prix : tout en centimes entiers ----------
 const cents = (n: unknown) => Math.round(Number(n) * 100);
-type Ligne = { ht: number; tva: number; ttc: number};
+type Ligne = {ht: number; tva: number; ttc: number};
 const euros = (c: number) => (c / 100).toFixed(2);
 
 
@@ -29,30 +29,37 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
   // 1. Charger tout le catalogue concerné en 3 requêtes
   const empIds = new Set<number>(data.empanadas.map((e) => e.empanadaId));
   const extIds = new Set<number>(data.extras.map((e) => e.extraId));
+  const boisIds = new Set<number>(data.boissons.map((e) => e.boissonId));
   data.formules.forEach((f) => {
     f.empanadasChoisies.forEach((id) => empIds.add(id));
     f.extrasChoisies.forEach((id) => extIds.add(id));
+    f.boissonsChoisies.forEach((id) => boisIds.add(id))
   });
 
-  const [empanadas, extras, formules] = await Promise.all([
+  const [empanadas, extras, boissons, formules] = await Promise.all([
     prisma.empanada.findMany({ where: { id: { in: [...empIds] }, actif: true } }),
     prisma.extra.findMany({ where: { id: { in: [...extIds] }, actif: true } }),
+    prisma.boisson.findMany({ where: { id: { in: [...boisIds] }, actif: true } }),
     prisma.formule.findMany({ where: { id: { in: data.formules.map((f) => f.formuleId) }, actif: true } }),
   ]);
   const empMap = new Map(empanadas.map((e) => [e.id, e]));
   const extMap = new Map(extras.map((e) => [e.id, e]));
+  const boisMap = new Map(boissons.map((e) => [e.id, e]));
   const forMap = new Map(formules.map((f) => [f.id, f]));
 
   // 2. Demande de stock cumulée (unités + choix de formules x quantité de formule)
   const besoinEmp = new Map<number, number>();
   const besoinExt = new Map<number, number>();
+  const besoinBois = new Map<number, number>();
   const add = (m: Map<number, number>, id: number, q: number) => m.set(id, (m.get(id) ?? 0) + q);
 
   data.empanadas.forEach((l) => add(besoinEmp, l.empanadaId, l.quantite));
   data.extras.forEach((l) => add(besoinExt, l.extraId, l.quantite));
+  data.boissons.forEach((l) => add(besoinBois, l.boissonId, l.quantite));
   data.formules.forEach((f) => {
     f.empanadasChoisies.forEach((id) => add(besoinEmp, id, f.quantite));
     f.extrasChoisies.forEach((id) => add(besoinExt, id, f.quantite));
+    f.boissonsChoisies.forEach((id) => add(besoinBois, id, f.quantite));
   });
 
   for (const [id, q] of besoinEmp) {
@@ -63,6 +70,11 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
   for (const [id, q] of besoinExt) {
     const p = extMap.get(id);
     if (!p) throw new CommandeError(`Extra ${id} indisponible`);
+    if (p.stock < q) throw new CommandeError(`Stock insuffisant pour ${p.nom}`, 409);
+  }
+    for (const [id, q] of besoinBois) {
+    const p = boisMap.get(id);
+    if (!p) throw new CommandeError(`Boisson ${id} indisponible`);
     if (p.stock < q) throw new CommandeError(`Stock insuffisant pour ${p.nom}`, 409);
   }
 
@@ -92,15 +104,40 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
     };
   });
 
+  const lignesBois = data.boissons.map((l) => {
+    const p = boisMap.get(l.boissonId)!;
+    const c = calculerLigne(dec(p.prixHt), dec(p.tauxTva), l.quantite);
+    cumul({ ht: cents(c.totalHt), tva: cents(c.totalTva), ttc: cents(c.totalTtc) });
+    return {
+      boissonId: p.id, quantite: l.quantite, nomFige: p.nom,
+      prixUnitaireHt: p.prixHt, tauxTva: p.tauxTva, supplementTtc: 0,
+      totalHt: c.totalHt.toFixed(2), totalTva: c.totalTva.toFixed(2), totalTtc: c.totalTtc.toFixed(2),
+    };
+  });
+
   const lignesFormules = data.formules.map((l) => {
     const f = forMap.get(l.formuleId);
     if (!f) throw new CommandeError(`Formule ${l.formuleId} indisponible`);
-    if (l.empanadasChoisies.length !== f.nombreEmpanadas || l.extrasChoisies.length !== f.nombreExtras) {
+    if (l.empanadasChoisies.length !== f.nombreEmpanadas 
+      || l.extrasChoisies.length !== f.nombreExtras
+      || l.boissonsChoisies.length !== f.nombreBoissons) {
       throw new CommandeError(`Composition invalide pour la formule ${f.nom}`);
     }
+    // Chaque choix doit exister dans le catalogue actif (sinon le "!" masque une erreur)
+    for (const id of l.empanadasChoisies) {
+      if (!empMap.has(id)) throw new CommandeError(`Empanada ${id} indisponible`);
+    }
+    for (const id of l.extrasChoisies) {
+      if (!extMap.has(id)) throw new CommandeError(`Extra ${id} indisponible`);
+    }
+    for (const id of l.boissonsChoisies) {
+      if (!boisMap.has(id)) throw new CommandeError(`Boisson ${id} indisponible`);
+    }
+
     const choix = [
       ...l.empanadasChoisies.map((id) => { const p = empMap.get(id)!; return { prixHt: dec(p.prixHt), tauxTva: dec(p.tauxTva), supplementTtc: dec(p.supplementFormuleTtc) }; }),
       ...l.extrasChoisies.map((id) => { const p = extMap.get(id)!; return { prixHt: dec(p.prixHt), tauxTva: dec(p.tauxTva), supplementTtc: dec(p.supplementFormuleTtc) }; }),
+      ...l.boissonsChoisies.map((id) => { const p = boisMap.get(id)!; return { prixHt: dec(p.prixHt), tauxTva: dec(p.tauxTva), supplementTtc: dec(p.supplementFormuleTtc) }; }),
     ];
 
     const lignesUnitaires = calculerFormule(dec(f.prixTtc), choix);
@@ -115,6 +152,7 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
       lignes, ht: total.ht, tva: total.tva, ttc: total.ttc,
       choixEmp: l.empanadasChoisies.map((id) => empMap.get(id)!),
       choixExt: l.extrasChoisies.map((id) => extMap.get(id)!),
+      choixBois: l.boissonsChoisies.map((id) => boisMap.get(id)!),
     };
   });
 
@@ -157,6 +195,7 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
         remiseTtc: euros(remiseTtcCents),
         empanadas: { create: lignesEmp },
         extras: { create: lignesExt },
+        boissons: { create: lignesBois },
       },
     });
 
@@ -184,6 +223,13 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
           totalHt: x.totalHt.toFixed(2), totalTva: x.totalTva.toFixed(2), totalTtc: x.totalTtc.toFixed(2),
         }; }),
       });
+      await tx.commandeBoisson.createMany({
+        data: lf.choixBois.map((p) => { const x = lf.lignes[li++]; return {
+          commandeId: c.id, commandeFormuleId: cf.id, boissonId: p.id, quantite: lf.input.quantite, nomFige: p.nom,
+          prixUnitaireHt: p.prixHt, tauxTva: x.tauxTva.toFixed(2), supplementTtc: p.supplementFormuleTtc,
+          totalHt: x.totalHt.toFixed(2), totalTva: x.totalTva.toFixed(2), totalTtc: x.totalTtc.toFixed(2),
+        }; }),
+      });
     }
     return c;
   });
@@ -192,6 +238,7 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
 
   // 5. Session Stripe : UNE ligne = total serveur (zéro écart de centimes)
   const frontUrl = process.env.FRONTEND_URL!;
+  if (!frontUrl) throw new Error('FRONTEND_URL non défini');
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -229,11 +276,13 @@ export const createCommandeAndSession = async (data: CreateCommandeInput) => {
 const includeDetails = {
   empanadas: { where: { commandeFormuleId: null }, include: { empanada: true } },
   extras:    { where: { commandeFormuleId: null }, include: { extra: true } },
+  boissons:  { where: { commandeFormuleId: null }, include: { boisson: true } },
   formules: {
     include: {
       formule: true,
       empanadasChoisies: { include: { empanada: true } },
       extrasChoisies: { include: { extra: true } },
+      boissonsChoisies: { include: { boisson: true } },
     },
   },
   remboursements: true,
@@ -271,12 +320,14 @@ const TRANSITIONS_MANUELLES: Partial<Record<StatutCommande, StatutCommande[]>> =
 };
 
 export const updateStatutCommande = async (id: number, nouveauStatut: StatutCommande) => {
-  const commande = await prisma.commande.findUniqueOrThrow({ where: { id } });
+  const commande = await prisma.commande.findUnique({ where: { id } });
+  if (!commande) throw new CommandeError(`Commande ${id} introuvable`, 404);
 
   const autorises = TRANSITIONS_MANUELLES[commande.statut] ?? [];
   if (!autorises.includes(nouveauStatut)) {
-    throw new Error(
-      `TRANSITION_INVALIDE: Passage de ${commande.statut} à ${nouveauStatut} non autorisé`,
+    throw new CommandeError(
+      `Passage de ${commande.statut} à ${nouveauStatut} non autorisé`,
+      409,
     );
   }
 

@@ -16,6 +16,7 @@ function feuilleVentes(wb: ExcelJS.Workbook, nom: string, lignes: LigneRapport[]
     { header: 'Prix avant réduction', key: 'avantReduction', width: 20 },
     { header: 'Réduction', key: 'reduction', width: 12 },
     { header: 'Prix TTC', key: 'totalTtc', width: 12 },
+    { header: 'Dont supplément formule TTC', key: 'supplementTtc', width: 20 },
     { header: 'Prix HT', key: 'totalHt', width: 12 },
     { header: 'TVA', key: 'montantTva', width: 12 },
     { header: 'Taux TVA', key: 'tauxTva', width: 10 },
@@ -33,17 +34,18 @@ function feuilleVentes(wb: ExcelJS.Workbook, nom: string, lignes: LigneRapport[]
       tauxTva: d.tauxTva / 100,
       montantTva: d.montantTva,
       totalTtc: d.totalTtc,
+      supplementTtc: d.supplementTtc,
     });
     enfant.font = { italic: true, size: 9, color: { argb: 'FF555555' } };
     }
   }
 
   ws.getRow(1).font = { bold: true };
-  ws.addRow({ produit: 'TOTAL', quantite: totaux.quantite, totalTtc: totaux.totalTtc, totalHt: totaux.totalHt, montantTva: totaux.totalTva }).font = { bold: true };
+  ws.addRow({ produit: 'TOTAL', quantite: totaux.quantite, totalTtc: totaux.totalTtc, totalHt: totaux.totalHt, montantTva: totaux.totalTva, supplementTtc: totaux.totalSupplements }).font = { bold: true };
 
 
   // Format monétaire
-  ['avantReduction', 'reduction', 'totalTtc', 'totalHt', 'montantTva'].forEach((k) => {
+  ['avantReduction', 'reduction', 'totalTtc', 'totalHt', 'montantTva', 'supplementTtc'].forEach((k) => {
     ws.getColumn(k).numFmt = '#,##0.00 €';
   });
   ws.getColumn('tauxTva').numFmt = '0.0%';
@@ -69,6 +71,7 @@ export async function genererExcelRapport(rapport: RapportVentes): Promise<Buffe
     { indicateur: 'Total HT (€)', valeur: rapport.global.totalHt },
     { indicateur: 'TVA (€)', valeur: rapport.global.totalTva },
     { indicateur: 'Total TTC net (€)', valeur: rapport.global.totalTtc },
+    { indicateur: 'Total suppléments formule TTC (€)', valeur: rapport.global.totalSupplements },
   ]);
   resume.getColumn('valeur').numFmt = FORMAT_EUR;
 

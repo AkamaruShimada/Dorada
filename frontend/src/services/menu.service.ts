@@ -7,6 +7,7 @@ export interface CheckoutFormule {
   quantite: number;
   empanadasChoisies : number[];
   extrasChoisies : number[];
+  boissonsChoisies: number[];
 }
 
 export interface CheckoutPayload {
@@ -19,6 +20,7 @@ export interface CheckoutPayload {
   codePromo? : string;
   empanadas: { empanadaId: number; quantite: number }[];
   extras: { extraId: number; quantite: number }[];
+  boissons: { boissonId: number; quantite: number }[];
   formules: CheckoutFormule[];
 }
 

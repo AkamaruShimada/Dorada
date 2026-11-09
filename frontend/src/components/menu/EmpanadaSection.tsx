@@ -1,10 +1,12 @@
 import type { Empanada } from '../../types/admin.types';
 import { calculerTtc } from '../../utils/pricing';
+import { stockRestant, type Reservations } from '../../utils/stock';
 import ProductCard from '../menu/ProductCard';
 
 type EmpanadaSectionProps = {
   typeLabel: string;
   empanadas: Empanada[];
+  reservations: Reservations;
   quantiteDansPanier: (id: number) => number;
   onAdd: (empanada: Empanada) => void;
 };
@@ -12,6 +14,7 @@ type EmpanadaSectionProps = {
 function EmpanadaSection({
   typeLabel,
   empanadas,
+  reservations,
   quantiteDansPanier,
   onAdd,
 }: EmpanadaSectionProps) {
@@ -35,7 +38,7 @@ function EmpanadaSection({
               'https://placehold.co/800x600?text=Empanada'
             }
             actif={empanada.actif}
-            stock={empanada.stock}
+            stock={stockRestant(empanada, 'empanadas', reservations)}
             badge={empanada.sansGluten ? 'Sans gluten' : undefined}
             quantiteDansPanier={quantiteDansPanier(empanada.id)}
             onAdd={() => onAdd(empanada)}

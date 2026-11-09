@@ -16,6 +16,7 @@ export const createEmpanadaSchema = z.object({
   prixHt: z.coerce.number().positive('Le prix doit être positif'),
   tauxTva: z.coerce.number().positive('Le taux doit être être positif'),
   type: z.enum(['SALEE', 'SUCREE', 'VEGETARIEN']),
+  supplementFormuleTtc: z.coerce.number().min(0).default(0),
   sansGluten: booleanFromFormData.default(false),
   stock: z.coerce.number().int().nonnegative().default(0),
   actif: booleanFromFormData.default(true),

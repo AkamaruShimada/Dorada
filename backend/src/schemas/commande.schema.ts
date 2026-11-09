@@ -23,17 +23,21 @@ export const createCommandeSchema = z
     extras: z
       .array(z.object({ extraId: z.number().int().positive(), quantite }))
       .default([]),
+    boissons: z
+      .array(z.object({ boissonId: z.number().int().positive(), quantite}))
+      .default([]),
     formules: z.array(
       z.object({
         formuleId: z.number().int().min(1).max(100),
         quantite: z.number().positive(),
         empanadasChoisies: z.array(z.number().int().positive()),
         extrasChoisies: z.array(z.number().int().positive()),
+        boissonsChoisies: z.array(z.number().int().positive()),
       }),
     ).default([])
   })
   .refine(
-    (d) => d.empanadas.length + d.extras.length + d.formules.length > 0,
+    (d) => d.empanadas.length + d.extras.length + d.boissons.length + d.formules.length > 0,
     { message: 'La commande est vide' },
   )
   .refine((d) => d.modeRecuperation !== 'LIVRAISON' || !!d.adresseLivraison, {

@@ -45,7 +45,7 @@ describe('empanada.service', () => {
     it('récupère toutes les empanadas (actives + inactives) si includeInactive=true', async () => {
       (prisma.empanada.findMany as any).mockResolvedValue([]);
 
-      await getAllEmpanadas(true);
+      await getAllEmpanadas();
 
       expect(prisma.empanada.findMany).toHaveBeenCalledWith({
         where: {},

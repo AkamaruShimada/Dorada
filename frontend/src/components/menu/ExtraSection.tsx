@@ -1,15 +1,18 @@
 import type { Extra } from '../../types/admin.types';
 import { calculerTtc } from '../../utils/pricing';
+import { stockRestant, type Reservations } from '../../utils/stock';
 import ProductCard from '../menu/ProductCard';
 
 type ExtraSectionProps = {
   extras: Extra[];
+  reservations: Reservations;
   quantiteDansPanier: (id: number) => number;
   onAdd: (extra: Extra) => void;
 };
 
 function ExtraSection({
   extras,
+  reservations,
   quantiteDansPanier,
   onAdd,
 }: ExtraSectionProps) {
@@ -32,7 +35,8 @@ function ExtraSection({
               extra.image_url || 'https://placehold.co/800x600?text=Extra'
             }
             actif={extra.actif}
-            stock={extra.stock}
+            stock={stockRestant(extra, 'extras', reservations)}
+            badge={extra.sansGluten ? 'Sans gluten' : undefined}
             quantiteDansPanier={quantiteDansPanier(extra.id)}
             onAdd={() => onAdd(extra)}
           />

@@ -20,6 +20,7 @@ function FormuleForm({ initialData, onSave, onCancel }: FormuleFormProps) {
   const [prixTtc, setPrixTtc] = useState(initialData?.prixTtc ?? 0);
   const [nombreEmpanadas, setNombreEmpanadas] = useState(initialData?.nombreEmpanadas ?? 1,);
   const [nombreExtras, setNombreExtras] = useState(initialData?.nombreExtras ?? 0);
+  const [nombreBoissons, setNombreBoissons] = useState(initialData?.nombreBoissons ?? 0);
   const [actif, setActif] = useState(initialData?.actif ?? true);
 
   const [imageEtat, setImageEtat] = useState<ImageEtat>({ type: 'inchangee' });
@@ -54,6 +55,7 @@ function FormuleForm({ initialData, onSave, onCancel }: FormuleFormProps) {
     formData.append('prixTtc', prixTtc.toFixed(2));
     formData.append('nombreEmpanadas', nombreEmpanadas.toString());
     formData.append('nombreExtras', nombreExtras.toString());
+    formData.append('nombreBoissons', nombreBoissons.toString());
     formData.append('actif', actif.toString());
 
     switch (imageEtat.type) {
@@ -124,7 +126,7 @@ function FormuleForm({ initialData, onSave, onCancel }: FormuleFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label
                 htmlFor="formule-nb-empanadas"
@@ -163,6 +165,29 @@ function FormuleForm({ initialData, onSave, onCancel }: FormuleFormProps) {
                 value={nombreExtras}
                 onChange={(event) =>
                   setNombreExtras(
+                    event.target.value === '' ? 0 : Number(event.target.value),
+                  )
+                }
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="formule-nb-boissons"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Nombre de boissons
+              </label>
+              <input
+                id="formule-nb-extras"
+                type="number"
+                min="0"
+                step="1"
+                value={nombreBoissons}
+                onChange={(event) =>
+                  setNombreBoissons(
                     event.target.value === '' ? 0 : Number(event.target.value),
                   )
                 }

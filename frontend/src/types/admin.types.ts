@@ -1,7 +1,6 @@
 // frontend/src/types/admin.types.ts
 
 export type TypeEmpanada = 'SALEE' | 'SUCREE' | 'VEGETARIEN';
-export type TypeExtra = 'DOUCEUR' | 'BOISSON';
 
 export interface Empanada {
   id: number;
@@ -10,6 +9,7 @@ export interface Empanada {
   type: TypeEmpanada;
   prixHt: number;
   tauxTva: number;
+  supplementFormuleTtc: number;
   sansGluten: boolean;
   stock: number;
   actif: boolean;
@@ -23,9 +23,9 @@ export interface Extra {
   id: number;
   nom: string;
   description: string;
-  type: TypeExtra;
   prixHt: number;
   tauxTva: number;
+  supplementFormuleTtc: number;
   sansGluten: boolean;
   stock: number;
   actif: boolean;
@@ -33,6 +33,23 @@ export interface Extra {
 }
 
 export type ExtraPayload = Omit<Extra, 'id'>;
+
+
+export interface Boisson {
+  id: number;
+  nom: string;
+  description: string;
+  alcool: boolean;
+  prixHt: number;
+  tauxTva: number;
+  supplementFormuleTtc: number;
+  stock: number;
+  actif: boolean;
+  image_url: string;
+}
+
+export type BoissonPayload = Omit<Boisson, 'id'>;
+
 
 export interface Formule {
   id: number;
@@ -43,6 +60,7 @@ export interface Formule {
   actif: boolean;
   nombreEmpanadas: number;
   nombreExtras: number;
+  nombreBoissons: number;
 }
 
 export type FormulePayload = Omit<Formule, 'id'>;
@@ -78,6 +96,8 @@ export type StatutRemboursement = 'EN_COURS' | 'REUSSI' | 'ECHOUE';
     commandeFormuleId: number | null;
     empanada?: { nom: string };
     extra?: { nom: string };
+    boisson?: { nom: string};
+    supplementTtc: number; // supplément TTC si c'est un composant de formule
  }
 
   export interface CommandeFormule {
@@ -87,6 +107,7 @@ export type StatutRemboursement = 'EN_COURS' | 'REUSSI' | 'ECHOUE';
     totalTtc: number;
     empanadasChoisies: LigneCommande[];
     extrasChoisies: LigneCommande[];
+    boissonsChoisies: LigneCommande[];
   }
 
 export interface Remboursement {
@@ -97,7 +118,7 @@ export interface Remboursement {
   statut: StatutRemboursement;
   demandeParNom: string;
   creeLe: string;
-  traiteLe: string;
+  traiteLe: string | null;
 }
 
 export interface Commande {
@@ -119,6 +140,7 @@ export interface Commande {
   codePromoFige: string | null; // null si aucun code promo
   empanadas: LigneCommande[];
   extras: LigneCommande[];
+  boissons: LigneCommande[];
   formules: CommandeFormule[];
   remboursements: Remboursement[];
 }

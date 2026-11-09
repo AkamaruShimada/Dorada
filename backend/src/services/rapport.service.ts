@@ -13,6 +13,7 @@ export interface DetailProduitFormule {
   totalHt: number;
   montantTva: number;
   totalTtc: number;
+  supplementTtc: number;
 }
 
 export interface LigneFormule extends LigneRapport {
@@ -23,6 +24,7 @@ export interface LigneRapport {
   produit: string;
   quantite: number;
   prixUnitaireTtc: number;
+  supplementTtc: number;
   totalHt: number;
   tauxTva: number | null;
   montantTva: number;
@@ -49,6 +51,7 @@ export interface TotauxRapport {
   totalHt: number;
   totalTva: number;
   totalTtc: number;
+  totalSupplements: number;
 }
 
 const STATUTS_VENTE = ['VALIDEE', 'RECUPEREE'] as const;
@@ -64,8 +67,9 @@ function calculerTotaux(lignes: LigneRapport[]): TotauxRapport {
       totalHt: arrondi(acc.totalHt + l.totalHt),
       totalTva: arrondi(acc.totalTva + l.montantTva),
       totalTtc: arrondi(acc.totalTtc + l.totalTtc),
+      totalSupplements: arrondi(acc.totalSupplements + l.supplementTtc),
     }),
-    { quantite: 0, totalHt: 0, totalTva: 0, totalTtc: 0 },
+    { quantite: 0, totalHt: 0, totalTva: 0, totalTtc: 0, totalSupplements: 0 },
   );
 }
 
@@ -79,6 +83,7 @@ export async function genererRapport(periode: Periode, type: TypeRapport): Promi
     include: {
       empanadas: { include: { empanada: true } },
       extras: { include: { extra: true } },
+      boissons: { include: { boisson: true } },
       formules: { include: { formule: true } },
     },
   });
@@ -122,6 +127,19 @@ export async function genererRapport(periode: Periode, type: TypeRapport): Promi
       }));
     }
 
+    for (const l of cmd.boissons.filter((x) => x.commandeFormuleId === null)) {
+      lignesUnite.push(construireLigne({
+        produit: l.boisson.nom,
+        quantite: l.quantite,
+        totalHt: n(l.totalHt),
+        totalTva: n(l.totalTva),
+        totalTtc: n(l.totalTtc),
+        tauxTva: n(l.tauxTva),
+        moyenPaiement,
+        signe,
+      }));
+    }
+
     // Ventes de formules : une ligne par CommandeFormule
     for (const f of cmd.formules) {
         // Produits enfants de cette formule
@@ -133,6 +151,7 @@ export async function genererRapport(periode: Periode, type: TypeRapport): Promi
             totalHt: n(x.totalHt),
             montantTva: n(x.totalTva),
             totalTtc: n(x.totalTtc),
+            supplementTtc: n(x.supplementTtc),
             })),
             ...cmd.extras.filter((x) => x.commandeFormuleId === f.id).map((x) => ({
             produit: x.extra.nom,
@@ -141,10 +160,23 @@ export async function genererRapport(periode: Periode, type: TypeRapport): Promi
             totalHt: n(x.totalHt),
             montantTva: n(x.totalTva),
             totalTtc: n(x.totalTtc),
+            supplementTtc: n(x.supplementTtc),
+            })),
+            ...cmd.boissons.filter((x) => x.commandeFormuleId === f.id).map((x) => ({
+            produit: x.boisson.nom,
+            quantite: x.quantite,
+            tauxTva: n(x.tauxTva),
+            totalHt: n(x.totalHt),
+            montantTva: n(x.totalTva),
+            totalTtc: n(x.totalTtc),
+            supplementTtc: n(x.supplementTtc),
             })),
         ];
 
         const detail = regrouperDetail(enfants, signe);
+        const supplementFormule = arrondi(
+          enfants.reduce((acc, e) => acc + e.supplementTtc, 0) * signe,
+        );
 
         lignesFormules.push({
             ...construireLigne({
@@ -156,6 +188,7 @@ export async function genererRapport(periode: Periode, type: TypeRapport): Promi
             tauxTva: null, // pas de moyenne : le taux est porté par le détail
             moyenPaiement,
             signe,
+            supplementTtc: supplementFormule, // pas de supplément pour la formule elle-même, c'est porté par le détail
             }),
             detail,
         } as LigneFormule);
@@ -175,6 +208,7 @@ export async function genererRapport(periode: Periode, type: TypeRapport): Promi
       totalHt: arrondi(totauxUnite.totalHt + totauxFormules.totalHt),
       totalTva: arrondi(totauxUnite.totalTva + totauxFormules.totalTva),
       totalTtc: arrondi(totauxUnite.totalTtc + totauxFormules.totalTtc),
+      totalSupplements: arrondi(totauxUnite.totalSupplements + totauxFormules.totalSupplements),
       nombreCommandes: commandes.length,
       nombreRemboursees,
     },
@@ -195,6 +229,7 @@ function regrouperDetail(
       existant.totalHt = arrondi(existant.totalHt + i.totalHt * signe);
       existant.montantTva = arrondi(existant.montantTva + i.montantTva * signe);
       existant.totalTtc = arrondi(existant.totalTtc + i.totalTtc * signe);
+      existant.supplementTtc = arrondi(existant.supplementTtc + i.supplementTtc * signe);
     } else {
       map.set(cle, {
         produit: i.produit,
@@ -203,6 +238,7 @@ function regrouperDetail(
         totalHt: arrondi(i.totalHt * signe),
         montantTva: arrondi(i.montantTva * signe),
         totalTtc: arrondi(i.totalTtc * signe),
+        supplementTtc: arrondi(i.supplementTtc * signe),
       });
     }
   }
@@ -219,6 +255,7 @@ function construireLigne(p: {
   tauxTva: number | null;
   moyenPaiement: string;
   signe: number;
+  supplementTtc?: number;
 }): LigneRapport {
   const quantite = p.quantite * p.signe;
   const totalHt = arrondi(p.totalHt * p.signe);
@@ -233,6 +270,7 @@ function construireLigne(p: {
     tauxTva: p.tauxTva,
     montantTva,
     totalTtc,
+    supplementTtc: arrondi((p.supplementTtc ?? 0)),
     moyenPaiement: p.moyenPaiement,
   };
 }

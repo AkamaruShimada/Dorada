@@ -28,6 +28,7 @@ function EmpanadaForm({ initialData, onSave, onCancel }: EmpanadaFormProps) {
     handlePrixTtcChange,
     handleTauxTvaChange,
   } = usePrice(initialData);
+  const [supplementFormuleTtc, setSupplementFormuleTtc] = useState(initialData?.supplementFormuleTtc ?? 0);
   const [type, setType] = useState<TypeEmpanada>(initialData?.type ?? 'SALEE');
   const [sansGluten, setSansGluten] = useState(initialData?.sansGluten ?? false);
   const [stock, setStock] = useState(initialData?.stock ?? 0);
@@ -70,6 +71,7 @@ function handleSubmit(event: React.SubmitEvent) {
   formData.append('description', description);
   formData.append('prixHt', prixHt.toString());
   formData.append('tauxTva', tauxTva.toString())
+  formData.append('supplementFormuleTtc', supplementFormuleTtc.toString());
   formData.append('type', type);
   formData.append('sansGluten', sansGluten.toString());
   formData.append('stock', stock.toString());
@@ -149,7 +151,7 @@ function handleSubmit(event: React.SubmitEvent) {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label
                 htmlFor="empanada-type"
@@ -187,6 +189,26 @@ function handleSubmit(event: React.SubmitEvent) {
                 onChange={(event) =>
                   setStock(event.target.value === '' ? 0 : Number(event.target.value))
                 }
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="empanada-supplement-formule-ttc"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Supplément Formule TTC (€)
+              </label>
+              <input
+                id="empanada-supplement-formule-ttc"
+                type="number"
+                min="0"
+                step="0.5"
+                value={supplementFormuleTtc}
+                onChange={(event) => 
+                  setSupplementFormuleTtc(event.target.value === '' ? 0 : Number(event.target.value))}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />

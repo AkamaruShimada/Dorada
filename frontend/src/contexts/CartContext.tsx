@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNo
 import type { CartItem, FormuleCartItem, ProduitCartItem } from '../types/cart.types';
 import { totalLigneTtc } from '../utils/pricing';
 
-const STORAGE_KEY = 'empanadas-cart';
+const STORAGE_KEY = 'cart';
 
 type Action =
   | { type: 'ADD_ITEM'; payload: Omit<ProduitCartItem, 'quantite'>; quantite: number }

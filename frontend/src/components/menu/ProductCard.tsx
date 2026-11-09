@@ -25,7 +25,7 @@ function ProductCard({
   onAdd,
 }: ProductCardProps) {
   const indisponible = !actif || stock <= 0;
-  const stockAtteint = quantiteDansPanier >= stock;
+  const stockAtteint = stock <= 0;
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-primary/10 bg-surface shadow-sm">

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import type { Commande, StatutCommande } from '../../types/admin.types';
-import { getStatsJour, type StatsJour } from '../../services/admin/commande.service';
+import { getStatsJour, updateStatutCommande, type StatsJour } from '../../services/admin/commande.service';
 import CommandesTable from '../../components/admin/CommandesTable';
 import CommandeDetailModal from '../../components/admin/CommandeDetailModal';
 import RemboursementModal from '../../components/admin/RemboursementModal';
+import ConfirmModal from '../../components/admin/ConfirmModal';
 import RapportModal from '../../components/admin/RapportModal';
 import type { TypeRapport } from '../../services/admin/rapport.service';
 
@@ -31,6 +32,21 @@ function AdminDashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [refundTarget, setRefundTarget] = useState<Commande | null>(null);
   const [rapportType, setRapportType] = useState<TypeRapport | null>(null);
+    const [statutTarget, setStatutTarget] = useState<{
+    commande: Commande;
+    statut: StatutCommande;
+  } | null>(null);
+
+  async function handleChangeStatut() {
+    if (!statutTarget) return;
+    try {
+      await updateStatutCommande(statutTarget.commande.id, statutTarget.statut);
+      setStatutTarget(null);
+    } catch (err) {
+      setStatutTarget(null);
+      setError(err instanceof Error ? err.message : 'Erreur lors du changement de statut');
+    }
+  }
 
   useEffect(() => {
     getStatsJour()
@@ -119,7 +135,9 @@ function AdminDashboard() {
               setRefundTarget(detailTarget);
               setDetailTarget(null); // ferme le détail pour ne pas empiler deux modales
             }}
-            onCancel={() => {}} // à brancher plus tard, voir ci-dessous
+            onCancel={() => 
+              setStatutTarget({ commande: detailTarget, statut: 'ANNULEE' })
+            } // à brancher plus tard, voir ci-dessous
           />
         )}
 
@@ -131,6 +149,19 @@ function AdminDashboard() {
               setRefundTarget(null);
               setRefreshKey((k) => k + 1); // recharge tableau, compteurs et stats
             }}
+          />
+        )}
+
+        {statutTarget && (
+          <ConfirmModal
+            title='Changer le statut'
+            message={
+              statutTarget.statut === 'ANNULEE'
+                ? `Annuler la commande ${statutTarget.commande.reference} ? Attention : cela ne rembourse pas le client, pense à le rembourser d'abord.`
+                : `Marquer la commande ${statutTarget.commande.reference} comme récupérée ?`
+            }
+            onConfirm={handleChangeStatut}
+            onCancel={() => setStatutTarget(null)}
           />
         )}
 

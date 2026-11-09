@@ -1,7 +1,7 @@
 // frontend/src/components/admin/ExtraForm.tsx
 
 import { useRef, useState } from 'react';
-import type { Extra, TypeExtra } from '../../types/admin.types';
+import type { Extra } from '../../types/admin.types';
 import { usePrice } from '../../hooks/usePrice';
 
 interface ExtraFormProps {
@@ -28,7 +28,7 @@ function ExtraForm({ initialData, onSave, onCancel }: ExtraFormProps) {
     handlePrixTtcChange,
     handleTauxTvaChange,
   } = usePrice(initialData);
-  const [type, setType] = useState<TypeExtra>(initialData?.type ?? 'DOUCEUR');
+  const [supplementFormuleTtc, setSupplementFormuleTtc] = useState(initialData?.supplementFormuleTtc ?? 0);
   const [sansGluten, setSansGluten] = useState(initialData?.sansGluten ?? false);
   const [stock, setStock] = useState(initialData?.stock ?? 0);
   const [actif, setActif] = useState(initialData?.actif ?? true);
@@ -70,7 +70,7 @@ function handleSubmit(event: React.SubmitEvent) {
   formData.append('description', description);
   formData.append('prixHt', prixHt.toString());
   formData.append('tauxTva', tauxTva.toString())
-  formData.append('type', type);
+  formData.append('supplementFormuleTtc', supplementFormuleTtc.toString())
   formData.append('sansGluten', sansGluten.toString())
   formData.append('stock', stock.toString());
   formData.append('actif', actif.toString());
@@ -152,26 +152,6 @@ function handleSubmit(event: React.SubmitEvent) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
-                htmlFor="extra-type"
-                className="mb-1.5 block text-sm font-semibold"
-              >
-                Type
-              </label>
-              <select
-                id="extra-type"
-                value={type}
-                onChange={(event) =>
-                  setType(event.target.value as TypeExtra)
-                }
-                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="DOUCEUR">Douceur</option>
-                <option value="BOISSON">Boisson</option>
-              </select>
-            </div>
-
-            <div>
-              <label
                 htmlFor="extra-stock"
                 className="mb-1.5 block text-sm font-semibold"
               >
@@ -186,6 +166,26 @@ function handleSubmit(event: React.SubmitEvent) {
                 onChange={(event) =>
                   setStock(event.target.value === '' ? 0 : Number(event.target.value))
                 }
+                required
+                className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="extra-supplement-formule-ttc"
+                className="mb-1.5 block text-sm font-semibold"
+              >
+                Supplément Formule TTC (€)
+              </label>
+              <input
+                id="extra-supplement-formule-ttc"
+                type="number"
+                min="0"
+                step="0.5"
+                value={supplementFormuleTtc}
+                onChange={(event) => 
+                  setSupplementFormuleTtc(event.target.value === '' ? 0 : Number(event.target.value))}
                 required
                 className="w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />

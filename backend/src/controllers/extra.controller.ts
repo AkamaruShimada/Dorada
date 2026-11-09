@@ -3,7 +3,6 @@
 import { Request, Response } from 'express';
 import * as extraService from '../services/extra.service';
 import { uploadImageBuffer, deleteImageByUrl } from '../services/upload.service';
-import { createExtraSchema, updateExtraSchema} from '../schemas/extra.schema'
 
 
 /**

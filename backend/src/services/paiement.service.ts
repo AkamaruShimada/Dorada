@@ -23,7 +23,7 @@ export const traiterPaiementReussi = async (
       where: commandeId
         ? { OR: [{ stripeSessionId: session.id }, { id: commandeId }] }
         : { stripeSessionId: session.id },
-      include: { empanadas: true, extras: true },
+      include: { empanadas: true, extras: true, boissons: true },
     });
 
     if (!commande) {
@@ -51,6 +51,13 @@ export const traiterPaiementReussi = async (
         where: { id: l.extraId, stock: { gte: l.quantite } },
         data: { stock: { decrement: l.quantite } },
       });
+    }
+
+    for (const l of commande.boissons) {
+      await tx.boisson.updateMany({
+        where: {id: l.boissonId, stock: { gte: l.quantite}},
+        data: { stock: {decrement: l.quantite}}
+      })
     }
 
     if (commande.codePromoId) {
@@ -81,11 +88,13 @@ export const traiterPaiementReussi = async (
       include: {
         empanadas: { include: { empanada: true } },
         extras: { include: { extra: true } },
+        boissons: { include: { boisson: true } },
         formules: {
           include: {
             formule: true,
             empanadasChoisies: { include: { empanada: true } },
             extrasChoisies: { include: { extra: true } },
+            boissonsChoisies: { include: { boisson: true } },
           },
         },
       },
@@ -114,6 +123,15 @@ export const traiterPaiementReussi = async (
         details: [] as string[],
       }));
 
+    const lignesBoissons = commandeValidee.boissons
+      .filter((l) => l.commandeFormuleId === null)
+      .map((l) => ({
+        nom: l.boisson.nom,
+        quantite: l.quantite,
+        prixUnitaire: Number(calculerTtcUnitaire(l.prixUnitaireHt, l.boisson.tauxTva)),
+        details: [] as string[],
+      }))
+
     const lignesFormules = commandeValidee.formules.map((f) => ({
       nom: f.formule.nom,
       quantite: f.quantite,
@@ -121,10 +139,11 @@ export const traiterPaiementReussi = async (
       details: [
         ...f.empanadasChoisies.map((e) => e.empanada.nom),
         ...f.extrasChoisies.map((e) => e.extra.nom),
+        ...f.boissonsChoisies.map((e) => e.boisson.nom),
       ],
     }));
 
-    const lignes = [...lignesFormules, ...lignesEmpanadas, ...lignesExtras];
+    const lignes = [...lignesFormules, ...lignesEmpanadas, ...lignesExtras, ...lignesBoissons];
 
     envoyerConfirmationCommande(commandeValidee.clientEmail, {
       reference: commandeValidee.reference,

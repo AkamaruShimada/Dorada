@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo } from 'react';
 import { useCart, getLigneId } from '../contexts/CartContext';
-import type { Empanada, Extra, Formule } from '../types/admin.types';
+import type { Boisson, Empanada, Extra, Formule } from '../types/admin.types';
 import { ligneValide } from '../utils/disponibilite';
 
 interface Catalogue {
   empanadas: Empanada[];
   extras: Extra[];
+  boissons: Boisson[];
   formules: Formule[];
 }
 
@@ -26,6 +27,10 @@ function useCleanCart(catalogue: Catalogue | null) {
     () => new Map((catalogue?.extras ?? []).map((p) => [p.id, p])),
     [catalogue],
   );
+  const boissonsParId = useMemo(
+    () => new Map((catalogue?.boissons ?? []).map((p) => [p.id, p])),
+    [catalogue],
+  );
   const formulesIds = useMemo(
     () => new Set((catalogue?.formules ?? []).filter((f) => f.actif).map((f) => f.id)),
     [catalogue],
@@ -35,11 +40,11 @@ function useCleanCart(catalogue: Catalogue | null) {
     if (!catalogue) return;
 
     for (const item of items) {
-      if (!ligneValide(item, empanadasParId, extrasParId, formulesIds)) {
+      if (!ligneValide(item, empanadasParId, extrasParId, boissonsParId, formulesIds)) {
         remove(getLigneId(item));
       }
     }
-  }, [catalogue, items, empanadasParId, extrasParId, formulesIds, remove]);
+  }, [catalogue, items, empanadasParId, extrasParId, boissonsParId, formulesIds, remove]);
 }
 
 export default useCleanCart

@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import empanadaRoutes from './routes/empanada.routes';
 import extraRoutes from './routes/extra.routes';
+import boissonRoutes from './routes/boisson.routes'
 import formuleRoutes from './routes/formule.routes';
 import commandeRoutes from './routes/commande.routes'
 import authRoutes from './routes/auth.routes';
@@ -36,10 +37,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Le serveur fonctionne' });
 });
 
-// Utilise les routes d'émpanadas
+// Utilise les routes d'empanadas
 app.use('/api/empanadas', empanadaRoutes);
 // Utilise les routes d'extras
 app.use('/api/extras', extraRoutes);
+// Utilise les routes des boissons
+app.use('/api/boissons', boissonRoutes);
 // Utilise les routes de formule
 app.use('/api/formules', formuleRoutes);
 // Utilise les routes de commandes

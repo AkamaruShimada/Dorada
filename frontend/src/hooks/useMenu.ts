@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getEmpanadas } from '../services/empanada.service';
 import { getExtras } from '../services/extra.service';
+import { getBoissons } from '../services/boisson.services';
 import { getFormules } from '../services/formule.service';
-import type { Empanada, Extra, Formule } from '../types/admin.types';
+import type { Empanada, Extra, Boisson, Formule } from '../types/admin.types';
 
 export interface Catalogue {
   empanadas: Empanada[];
   extras: Extra[];
+  boissons: Boisson[]
   formules: Formule[];
 }
 
@@ -19,12 +21,13 @@ export function useMenu() {
     setIsLoading(true);
     setError(null);
     try {
-      const [empanadas, extras, formules] = await Promise.all([
+      const [empanadas, extras, boissons, formules] = await Promise.all([
         getEmpanadas(),
         getExtras(),
+        getBoissons(),
         getFormules(),
       ]);
-      setCatalogue({ empanadas, extras, formules });
+      setCatalogue({ empanadas, extras, boissons, formules });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {

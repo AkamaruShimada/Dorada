@@ -19,11 +19,6 @@ enum TypeEmpanada {
   VEGETARIEN
 }
 
-enum TypeExtra {
-  DOUCEUR
-  BOISSON
-}
-
 enum StatutCommande {
   EN_ATTENTE_PAIEMENT
   VALIDEE
@@ -64,13 +59,13 @@ model Empanada {
   nom                   String
   description           String
   type                  TypeEmpanada
-  stock                 Int           @default(0)
-  prixHt                Decimal       @db.Decimal(10, 2)
-  tauxTva               Decimal       @default(5.5) @db.Decimal(4, 2)
   sansGluten            Boolean       @default(false)
-  image_url             String?
-  actif                 Boolean       @default(true)
+  prixHt                Decimal       @db.Decimal(10, 2)
+  tauxTva               Decimal       @default(10) @db.Decimal(4, 2)
   supplementFormuleTtc  Decimal       @default(0) @db.Decimal(10, 2)
+  stock                 Int           @default(0)
+  actif                 Boolean       @default(true)
+  image_url             String?
 
   commandeEmpanadas CommandeEmpanada[]
 
@@ -82,19 +77,36 @@ model Extra {
   id                    Int        @id @default(autoincrement())
   nom                   String
   description           String
-  type                  TypeExtra
-  stock                 Int        @default(0)
-  tauxTva               Decimal    @default(5.5) @db.Decimal(4, 2)
+  sansGluten            Boolean    @default(false)
   prixHt                Decimal    @db.Decimal(10, 2)
-  sansGluten            Boolean?   @default(false)
-  image_url             String?
-  actif                 Boolean    @default(true)
+  tauxTva               Decimal    @default(5.5) @db.Decimal(4, 2)
   supplementFormuleTtc  Decimal    @default(0) @db.Decimal(10, 2)
+  stock                 Int        @default(0)
+  actif                 Boolean    @default(true)
+  image_url             String?
 
   commandeExtras CommandeExtra[]
 
   @@index([actif])
   @@map("extras")
+}
+
+model Boisson {
+  id                    Int     @id @default(autoincrement())
+  nom                   String
+  description           String?
+  alcool                Boolean @default(false)
+  prixHt                Decimal @db.Decimal(10, 2)
+  tauxTva               Decimal @default(5.5) @db.Decimal(4, 2)
+  supplementFormuleTtc  Decimal @default(0) @db.Decimal(10, 2)
+  stock                 Int     @default(0)
+  actif                 Boolean @default(true)
+  image_url             String?
+
+  commandeBoissons CommandeBoisson[]
+
+  @@index([actif])
+  @@map("boissons")
 }
 
 model Formule {
@@ -104,8 +116,9 @@ model Formule {
   prixTtc         Decimal  @db.Decimal(10, 2)   // prix fixe TTC, ex 18.90
   image_url       String?
   actif           Boolean  @default(true)
-  nombreEmpanadas Int      // quota d'empanadas à choisir
-  nombreExtras    Int      @default(0)          // quota d'extras à choisir
+  nombreEmpanadas Int      @default(0)
+  nombreExtras    Int      @default(0)
+  nombreBoissons  Int      @default(0)
 
   commandeFormules CommandeFormule[]
 
@@ -185,6 +198,7 @@ model Commande {
 
   empanadas      CommandeEmpanada[]   // empanadas à l'unité (hors formule)
   extras         CommandeExtra[]      // extras à l'unité (hors formule)
+  boissons       CommandeBoisson[]
   formules       CommandeFormule[]
   remboursements Remboursement[]
 
@@ -220,6 +234,7 @@ model CommandeFormule {
 
   empanadasChoisies CommandeEmpanada[]
   extrasChoisies    CommandeExtra[]
+  boissonsChoisies  CommandeBoisson[]
 
   @@index([commandeId])
   @@map("commande_formules")
@@ -270,6 +285,29 @@ model CommandeExtra {
   @@index([commandeId])
   @@index([commandeFormuleId])
   @@map("commande_extras")
+}
+
+model CommandeBoisson {
+  id                Int      @id @default(autoincrement())
+  commande          Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  commandeId        Int
+  boisson           Boisson    @relation(fields: [boissonId], references: [id])
+  boissonId         Int
+  quantite          Int
+  nomFige           String
+  prixUnitaireHt    Decimal  @db.Decimal(10, 2)
+  tauxTva           Decimal  @db.Decimal(4, 2)
+  supplementTtc     Decimal  @default(0) @db.Decimal(10, 2)
+  totalHt           Decimal  @db.Decimal(10, 2)
+  totalTva          Decimal  @db.Decimal(10, 2)
+  totalTtc          Decimal  @db.Decimal(10, 2)
+
+  commandeFormule   CommandeFormule? @relation(fields: [commandeFormuleId], references: [id], onDelete: Cascade)
+  commandeFormuleId Int?
+
+  @@index([commandeId])
+  @@index([commandeFormuleId])
+  @@map("commande_boissons")
 }
 
 // --- Remboursements ---

@@ -117,6 +117,9 @@ function AdminFormules() {
                     <th scope="col" className="px-4 py-3 text-center font-semibold">
                       Extras
                     </th>
+                    <th scope="col" className="px-4 py-3 text-center font-semibold">
+                      Boissons
+                    </th>
                     <th scope="col" className="px-4 py-3 text-right font-semibold">
                       Prix TTC
                     </th>
@@ -146,6 +149,9 @@ function AdminFormules() {
                       </td>
                       <td className="px-4 py-3 text-center tabular-nums">
                         {formule.nombreExtras}
+                      </td>
+                      <td className="px-4 py-3 text-center tabular-nums">
+                        {formule.nombreBoissons}
                       </td>
                       <td className="px-4 py-3 text-right font-medium tabular-nums">
                         {formatPrix(formule.prixTtc)}

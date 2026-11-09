@@ -16,7 +16,7 @@ function AdminLayout() {
             {/* Logo */}
             <div className="flex items-center gap-2">
                 <a href="/" className="font-bold text-xl">
-                    <img src="/images/dorada_logo.png" alt="Logo" className="h-30 w-auto" />
+                    <img src="https://res.cloudinary.com/b9qac4kt/image/upload/v1790696646/OFFICIAL_DORADA.png" alt="Logo" className="h-30 w-auto" />
                 </a>
 
                 <h1 className="text-xl font-bold">{utilisateur?.nom}</h1>
@@ -30,6 +30,7 @@ function AdminLayout() {
                 </NavLink>
                 <NavLink to="/admin/empanadas">Empanadas</NavLink>
                 <NavLink to="/admin/extras">Extras</NavLink>
+                <NavLink to="/admin/boissons">Boissons</NavLink>
                 <NavLink to="/admin/formules">Formules</NavLink>
                 <NavLink to="/admin/commandes">Commandes</NavLink>
                 <NavLink to="/admin/codes-promo">Codes Promo</NavLink>
@@ -61,8 +62,9 @@ function AdminLayout() {
                 <NavLink to="/admin" end>Tableau de bord
                 </NavLink>
                 <NavLink to="/admin/empanadas">Empanadas</NavLink>
-                <NavLink to="/admin/formules">Formules</NavLink>
                 <NavLink to="/admin/extras">Extras</NavLink>
+                <NavLink to="/admin/boissons">Boissons</NavLink>
+                <NavLink to="/admin/formules">Formules</NavLink>
                 <NavLink to="/admin/commandes">Commandes</NavLink>
             <button
                 onClick={logout}

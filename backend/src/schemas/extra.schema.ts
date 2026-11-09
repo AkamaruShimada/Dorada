@@ -15,8 +15,8 @@ export const createExtraSchema = z.object({
   description: z.string().min(5, 'La description est trop courte'),
   prixHt: z.coerce.number().positive('Le prix doit être positif'),
   tauxTva: z.coerce.number().positive('Le taux doit être être positif'),
-  type: z.enum(['DOUCEUR', 'BOISSON']),
-  sansGluten: booleanFromFormData.default(false).optional(),
+  supplementFormuleTtc: z.coerce.number().min(0).default(0),
+  sansGluten: booleanFromFormData.default(false),
   stock: z.coerce.number().int().nonnegative().default(0),
   actif: booleanFromFormData.default(true),
 });

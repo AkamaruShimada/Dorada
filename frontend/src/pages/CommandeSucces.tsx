@@ -17,14 +17,14 @@ function CommandeSucces() {
   return (
     <div className="min-h-screen bg-surface p-6 text-primary">
       <div className="mx-auto max-w-xl rounded-xl border border-primary/10 px-6 py-12 text-center shadow-sm">
-        <h1 className="text-2xl font-bold">Merci pour ta commande !</h1>
+        <h1 className="text-2xl font-bold">Merci pour votre commande !</h1>
         {reference && (
           <p className="mt-2">
             Référence : <span className="font-mono font-semibold">{reference}</span>
           </p>
         )}
         <p className="mt-2 text-sm opacity-70">
-          Un email de confirmation t’a été envoyé.
+          Un email de confirmation vous a été envoyé.
         </p>
         <Link
           to="/menu"

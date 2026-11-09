@@ -14,6 +14,8 @@ import {
 } from '../utils/creneaux';
 
 import { isProduit, isFormule, type ProduitCartItem } from '../types/cart.types';
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
 
 const inputClass =
   'w-full rounded-lg border border-primary/20 bg-surface px-3 py-2.5 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20';
@@ -25,11 +27,14 @@ const prixUnitaireTtc = (item: CartItem): number =>
 /** Total TTC d'une ligne */
 const totalLigne = (item: CartItem): number =>
   item.kind === 'formule'
-    ? item.prixTtc * item.quantite
+    ? (item.prixTtc * item.quantite) 
+    + item.empanadasChoisies.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0) * item.quantite
+    + item.extrasChoisis.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0) * item.quantite 
+    + item.boissonsChoisies.reduce((sum, b) => sum + (b.supplementFormuleTtc || 0), 0) * item.quantite 
     : totalLigneTtc(item.prixHt, item.tauxTva, item.quantite);
 
 function PanierPage() {
-  const { items, totalTtc, setQuantite, remove } = useCart();
+  const { items, setQuantite, remove } = useCart();
 
   const [clientNom, setClientNom] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -75,10 +80,20 @@ function PanierPage() {
   };
 
   // Estimation d'affichage uniquement : le serveur recalcule le montant réel
+  const totalAvecSupplements = items.reduce((s, i) => {
+    if (i.kind === 'formule') {
+      const supplementTotal = i.empanadasChoisies.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0)
+        + i.extrasChoisis.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0)
+        + i.boissonsChoisies.reduce((sum, b) => sum + (b.supplementFormuleTtc || 0), 0);
+      return s + (i.prixTtc + supplementTotal) * i.quantite;
+    }
+    return s;
+  }, 0);
+
   const remiseEstimee = promoAppliquee
-    ? Math.round(totalTtc * promoAppliquee.pourcentage) / 100
+    ? Math.round(totalAvecSupplements * promoAppliquee.pourcentage) / 100
     : 0;
-  const totalApresRemise = totalTtc - remiseEstimee;
+  const totalApresRemise = totalAvecSupplements - remiseEstimee;
 
   function handleJourChange(key: string) {
     setJourChoisi(key);
@@ -123,6 +138,10 @@ function PanierPage() {
           .filter((i): i is ProduitCartItem => isProduit(i) && i.kind === 'extra')
           .map((i) => ({ extraId: i.id, quantite: i.quantite })),
 
+        boissons: items
+          .filter((i): i is ProduitCartItem => isProduit(i) && i.kind === 'boisson')
+          .map((i) => ({ boissonId: i.id, quantite: i.quantite })),
+
         formules: items.
           filter(isFormule)
           .map((i) => ({
@@ -130,6 +149,7 @@ function PanierPage() {
             quantite: i.quantite,
             empanadasChoisies: i.empanadasChoisies.map((e) => e.id),
             extrasChoisies: i.extrasChoisis.map((e) => e.id),
+            boissonsChoisies: i.boissonsChoisies.map((b) => b.id),
           })),
       });
 
@@ -144,21 +164,30 @@ function PanierPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-surface p-6 text-primary">
-        <div className="mx-auto max-w-xl rounded-xl border border-primary/10 px-6 py-12 text-center shadow-sm">
-          <p className="font-medium">Ton panier est vide.</p>
-          <Link
-            to="/menu"
-            className="mt-4 inline-block rounded-lg bg-primary px-4 py-2.5 font-semibold text-surface transition hover:opacity-90"
-          >
-            Voir le menu
-          </Link>
+      <>
+        <Header/>
+
+        <div className="min-h-screen bg-surface p-6 text-primary">
+          <div className="mx-auto max-w-xl rounded-xl border border-primary/10 px-6 py-12 text-center shadow-sm">
+            <p className="font-medium">Ton panier est vide.</p>
+            <Link
+              to="/menu"
+              className="mt-4 inline-block rounded-lg bg-primary px-4 py-2.5 font-semibold text-surface transition hover:opacity-90"
+              >
+              Voir le menu
+            </Link>
+          </div>
         </div>
-      </div>
+
+        <Footer/>
+      </>
     );
   }
 
   return (
+  <>
+    <Header/>
+  
     <div className="min-h-screen bg-surface p-4 text-primary sm:p-6">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_420px]">
         <section aria-labelledby="panier-title">
@@ -191,12 +220,17 @@ function PanierPage() {
                         {item.empanadasChoisies.length > 0 && (
                           <p>
                             Empanadas :{' '}
-                            {item.empanadasChoisies.map((p) => p.nom).join(', ')}
+                            {item.empanadasChoisies.map((p) => p.nom + (p.supplementFormuleTtc ? ` (+${p.supplementFormuleTtc.toFixed(2)} €)` : '')).join(', ')}
                           </p>
                         )}
                         {item.extrasChoisis.length > 0 && (
                           <p>
-                            Extras : {item.extrasChoisis.map((p) => p.nom).join(', ')}
+                            Extras : {item.extrasChoisis.map((p) => p.nom + (p.supplementFormuleTtc ? ` (+${p.supplementFormuleTtc.toFixed(2)} €)` : '')).join(', ')}
+                          </p>
+                        )}
+                        {item.boissonsChoisies.length > 0 && (
+                          <p>
+                            Boissons : {item.boissonsChoisies.map((p) => p.nom + (p.supplementFormuleTtc ? ` (+${p.supplementFormuleTtc.toFixed(2)} €)` : '')).join(', ')}
                           </p>
                         )}
                       </div>
@@ -380,6 +414,9 @@ function PanierPage() {
         </form>
       </div>
     </div>
+
+    <Footer/>
+  </>
   );
 }
 

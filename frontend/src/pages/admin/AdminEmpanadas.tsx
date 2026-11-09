@@ -127,6 +127,9 @@ function AdminEmpanadas() {
                   <th scope="col" className="px-4 py-3 text-right font-semibold">
                     Prix TTC
                   </th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">
+                    Supplément Formule TTC
+                  </th>
                   <th scope="col" className="px-4 py-3 text-center font-semibold">
                     Stock
                   </th>
@@ -165,6 +168,9 @@ function AdminEmpanadas() {
                     </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums">
                       {formatPrix(calculerTtc(empanada.prixHt, empanada.tauxTva))}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums">
+                      {"+" + formatPrix(empanada.supplementFormuleTtc)}
                     </td>
                     <td className="px-4 py-3 text-center tabular-nums">
                       {empanada.stock}

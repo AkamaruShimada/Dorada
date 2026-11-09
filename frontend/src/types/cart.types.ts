@@ -1,6 +1,6 @@
-import type { Empanada, Extra, Formule } from './admin.types';
+import type { Empanada, Extra, Boisson, Formule } from './admin.types';
 
-export type ProduitKind = 'empanada' | 'extra';
+export type ProduitKind = 'empanada' | 'extra' | 'boisson';
 
 // Dérivés des types admin pour éviter les divergences
 export interface ProduitCartItem {
@@ -17,8 +17,6 @@ export interface ProduitCartItem {
 
 export interface FormuleCartItem {
   kind: 'formule';
-  // Identifie une configuration précise : deux formules identiques
-  // avec des choix différents restent deux lignes distinctes.
   ligneId: string;
   id: number;
   nom: string;
@@ -27,8 +25,10 @@ export interface FormuleCartItem {
   prixTtc: number;
   nombreEmpanadas: number;
   nombreExtras: number;
-  empanadasChoisies: { id: number; nom: string }[];
-  extrasChoisis: { id: number; nom: string }[];
+  nombreBoissons: number;
+  empanadasChoisies: { id: number; nom: string; supplementFormuleTtc: number }[];
+  extrasChoisis: { id: number; nom: string; supplementFormuleTtc: number }[];
+  boissonsChoisies: { id: number; nom: string; supplementFormuleTtc: number }[];
   quantite: number;
 }
 
@@ -40,4 +40,4 @@ export const isFormule = (item: CartItem): item is FormuleCartItem =>
 export const isProduit = (item: CartItem): item is ProduitCartItem =>
   item.kind !== 'formule';
 
-export type { Empanada, Extra, Formule };
+export type { Empanada, Extra, Boisson, Formule };
