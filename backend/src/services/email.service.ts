@@ -12,7 +12,7 @@ export async function envoyerConfirmationCommande(
 ) {
   const { error } = await resend.emails.send({
     from: emailInfo.from,
-    to: destinataire,
+    to: destinataire + ', ' + emailInfo.contact,
     subject: `Confirmation de commande ${donnees.reference}`,
     html: templateConfirmationCommande(donnees),
   });
