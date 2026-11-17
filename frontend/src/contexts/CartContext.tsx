@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react';
 import type { CartItem, FormuleCartItem, ProduitCartItem } from '../types/cart.types';
-import { totalLigneTtc } from '../utils/pricing';
+import { totalPanierTtc } from '../utils/pricing';
 
 const STORAGE_KEY = 'cart';
 
@@ -110,13 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       remove: (ligneId) => dispatch({ type: 'REMOVE', ligneId }),
       clear: () => dispatch({ type: 'CLEAR' }),
       nombreArticles: items.reduce((s, i) => s + i.quantite, 0),
-      totalTtc: items.reduce((somme, item) => {
-        const ligne =
-          item.kind === 'formule'
-            ? item.prixTtc * item.quantite
-            : totalLigneTtc(item.prixHt, item.tauxTva, item.quantite);
-        return somme + ligne;
-      }, 0),
+      totalTtc: totalPanierTtc(items)
     }),
     [items],
   );

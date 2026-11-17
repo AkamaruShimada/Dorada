@@ -5,6 +5,8 @@ import Footer from "../components/layout/Footer"
 import Hero from "../components/sections/Hero"
 import HistoireSection from "../components/sections/HistoireSection"
 import SliderEmpanada from "../components/sections/SliderEmpanada"
+import TraiteurBanner from "../components/sections/TraiteurBanner"
+import Reassurance from "../components/sections/Reassurance"
 
 function HomePage() {
 
@@ -18,7 +20,7 @@ function HomePage() {
         sousTitre="Empanadas artisanales"
         badges={['Généreuses', 'Dorées', 'Faites maison']}
         description="Des empanadas inspirées de l'Argentine, préparées chaque jour avec passion à La Farlède."
-        imageUrl="https://res.cloudinary.com/b9qac4kt/image/upload/v1794149844/Home_Presentation.png"
+        imageUrl="https://res.cloudinary.com/b9qac4kt/image/upload/v1794940965/home_banner.png"
         imageAlt="Empanadas dorées garnies de viande"
         ctaPrincipal={{ label: 'Commander', href: '/menu' }}
         ctaSecondaire={{ label: 'Découvrir', href: '#histoire' }}
@@ -37,6 +39,8 @@ function HomePage() {
         signature="Maxime"
       />
         <SliderEmpanada/>
+        <TraiteurBanner/>
+        <Reassurance/>
         <Footer/>
         </>
     )

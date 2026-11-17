@@ -1,10 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --color-primary: #001311;
+  --color-dark: #001311;
   --color-secondary: #b88531;
   --color-surface: #efe7dc;
-  --color-dark: #001311;
-
+  --color-cream: #f6f0e7;
   --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "DM Sans", sans-serif;
 }
+
+@utility scrollbar-brand {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-secondary) transparent;
+
+  /* Chrome, Edge, Safari */
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-secondary);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #d4a04a;
+  }
+}
+
+@utility title-ornament {
+  position: relative;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: .08em;
+  padding-bottom: 1.15rem;
+  &::after {
+    content: "◆";
+    position: absolute;
+    color: var(--color-secondary);
+    font-family: sans-serif;
+    font-size: .7rem;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+  }
+}
+
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--color-surface); color: var(--color-primary); font-family: var(--font-sans); }
+::selection { background: #b88531; color: #001311; }

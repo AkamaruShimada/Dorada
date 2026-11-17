@@ -65,7 +65,7 @@ export default function Footer() {
             <li>La Farlède, France</li>
             <li>
               <a href="mailto:lesfarcislatelier@gmail.com" className="transition hover:text-[#b8892e]">
-                contact@lesfarcis.fr
+                lesfarcislatelier@gmail.com
               </a>
             </li>
             <li>

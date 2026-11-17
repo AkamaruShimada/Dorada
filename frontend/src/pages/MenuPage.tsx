@@ -1,13 +1,19 @@
 // frontend/src/pages/MenuPage.tsx
 
 import { useMemo } from 'react';
-import type { Empanada } from '../types/admin.types';
+import type { Empanada, Extra, Boisson } from '../types/admin.types';
+import type { ProduitCartItem } from '../types/cart.types.ts';
 import { useCart } from '../contexts/CartContext';
 import { useMenu } from '../hooks/useMenu';
 import useCleanCart from '../hooks/useCleanCart';
 
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+
+import PageBanner from '../components/sections/PageBanner';
+import TraiteurBanner from '../components/sections/TraiteurBanner';
+import Reassurance from '../components/sections/Reassurance';
+
 import EmpanadaSection from '../components/menu/EmpanadaSection';
 import ExtraSection from '../components/menu/ExtraSection';
 import BoissonSection from '../components/menu/BoissonSection';
@@ -15,13 +21,21 @@ import FormuleSection from '../components/menu/FormuleSection';
 
 import { reservationsPanier, stockVendableCategorie } from '../utils/stock';
 
-const TYPE_LABELS: Record<Empanada['type'], string> = {
-  SALEE: 'Salées',
-  SUCREE: 'Sucrées',
-  VEGETARIEN: 'Végétariennes',
-};
-
-const ORDRE_TYPES: Empanada['type'][] = ['SALEE', 'SUCREE', 'VEGETARIEN'];
+function toCartItem(
+  kind: ProduitCartItem['kind'], 
+  produit: Empanada | Extra | Boisson
+): Omit<ProduitCartItem, 'quantite'> {
+  return { 
+    kind, 
+    id: produit.id, 
+    nom: produit.nom, 
+    description: produit.description, 
+    prixHt: produit.prixHt,
+    tauxTva: produit.tauxTva, 
+    imageUrl: produit.image_url, 
+    stock: produit.stock 
+  };
+}
 
 function MenuPage() {
   const { catalogue, isLoading, error, reload } = useMenu();
@@ -31,20 +45,21 @@ function MenuPage() {
 
   const reservations = useMemo(() => reservationsPanier(items), [items]);
 
-  if (isLoading) return <p className="p-6">Chargement du menu...</p>;
+  const quantites = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of items) {
+      const key = `${item.kind}:${item.id}`;
+      map.set(key, (map.get(key) ?? 0) + item.quantite);
+    }
+    return map;
+  }, [items]);
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <p role="alert">{error}</p>
-        <button type="button" onClick={reload} className="mt-3 underline">
-          Réessayer
-        </button>
-      </div>
-    );
-  }
+  const quantiteDans = (kind: 'empanada' | 'extra' | 'boisson' | 'formule', id: number) => 
+    quantites.get(`${kind}:${id}`) ?? 0;
 
-  if (!catalogue) return null;
+  if (isLoading) return <><Header /><main className="bg-surface p-8 text-center">Chargement du menu…</main><Footer /></>;
+  if (error) return <><Header /><main className="bg-surface p-8 text-center"><p role="alert">{error}</p><button type="button" onClick={reload} className="mt-3 underline">Réessayer</button></main><Footer /></>;
+  if (!catalogue) return <><Header /><main className="min-h-[40vh] bg-surface" /><Footer /></>;
 
   const { empanadas, extras, boissons, formules } = catalogue;
 
@@ -54,26 +69,27 @@ function MenuPage() {
     boissons: stockVendableCategorie(boissons, 'boissons', reservations),
   };
 
-  const quantiteDans = (kind: 'empanada' | 'extra' | 'boisson' | 'formule', id: number) =>
-    items.find((i) => i.kind === kind && i.id === id)?.quantite ?? 0;
-
-  const groupesParType = ORDRE_TYPES.map((type) => ({
-    type,
-    empanadas: empanadas.filter((e) => e.type === type),
-  })).filter((g) => g.empanadas.length > 0);
-
   return (
     <>
       <Header />
 
-      <main className="min-h-screen bg-surface p-4 text-primary sm:p-6">
-        <div className="mx-auto max-w-7xl space-y-10">
-          <header>
-            <h1 className="text-3xl font-bold tracking-tight">Notre menu</h1>
-            <p className="mt-1 text-sm opacity-70">
-              Les produits marqués « indisponible » reviennent bientôt.
-            </p>
-          </header>
+      <main className="bg-surface text-primary">
+        <PageBanner 
+          title="Nos produits / et formules" 
+          subtitle="Des empanadas artisanales pour chaque envie." 
+          imageUrl="https://res.cloudinary.com/b9qac4kt/image/upload/v1794940965/home_banner.png" 
+          imageAlt="Empanadas artisanales dorées" 
+        />
+        
+        <Reassurance/>
+        <div className="mx-auto max-w-7xl space-y-16 px-5 py-14 sm:px-8 md:py-20">
+
+          <EmpanadaSection
+            empanadas={empanadas}
+            reservations={reservations}
+            quantiteDansPanier={(id) => quantiteDans('empanada', id)}
+            onAdd={(p) => addItem(toCartItem('empanada', p))}
+          />
 
           <FormuleSection
             formules={formules}
@@ -101,65 +117,27 @@ function MenuPage() {
             }
           />
 
-          {groupesParType.map((groupe) => (
-            <EmpanadaSection
-              key={groupe.type}
-              typeLabel={TYPE_LABELS[groupe.type]}
-              empanadas={groupe.empanadas}
-              reservations={reservations}
-              quantiteDansPanier={(id) => quantiteDans('empanada', id)}
-              onAdd={(empanada) =>
-                addItem({
-                  kind: 'empanada',
-                  id: empanada.id,
-                  nom: empanada.nom,
-                  description: empanada.description,
-                  prixHt: empanada.prixHt,
-                  tauxTva: empanada.tauxTva,
-                  imageUrl: empanada.image_url,
-                  stock: empanada.stock,
-                })
-              }
-            />
-          ))}
-
-          <ExtraSection
-            extras={extras}
-            reservations={reservations}
-            quantiteDansPanier={(id) => quantiteDans('extra', id)}
-            onAdd={(extra) =>
-              addItem({
-                kind: 'extra',
-                id: extra.id,
-                nom: extra.nom,
-                description: extra.description,
-                prixHt: extra.prixHt,
-                tauxTva: extra.tauxTva,
-                imageUrl: extra.image_url,
-                stock: extra.stock,
-              })
-            }
-          />
-
-          <BoissonSection
-            boissons={boissons}
-            reservations={reservations}
-            quantiteDansPanier={(id) => quantiteDans('boisson', id)}
-            onAdd={(boisson) =>
-              addItem({
-                kind: 'boisson',
-                id: boisson.id,
-                nom: boisson.nom,
-                description: boisson.description,
-                prixHt: boisson.prixHt,
-                tauxTva: boisson.tauxTva,
-                imageUrl: boisson.image_url,
-                stock: boisson.stock,
-              })
-            }
-          />
-          
+          <div className="grid gap-10 md:grid-cols-2 md:gap-12">
+            <div>
+              <ExtraSection
+                extras={extras}
+                reservations={reservations}
+                quantiteDansPanier={(id) => quantiteDans('extra', id)}
+                onAdd={(p) => addItem(toCartItem('extra', p))}
+                />
+            </div>
+            
+            <div className="border-t border-secondary/40 pt-8 md:border-l md:border-t-0 md:pl-12 md:pt-0">
+              <BoissonSection
+                boissons={boissons}
+                reservations={reservations}
+                quantiteDansPanier={(id) => quantiteDans('boisson', id)}
+                onAdd={(p) => addItem(toCartItem('boisson', p))}
+              />
+            </div>
+          </div>
         </div>
+        <TraiteurBanner/>
       </main>
     
       <Footer />

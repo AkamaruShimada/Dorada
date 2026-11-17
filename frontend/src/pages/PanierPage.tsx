@@ -5,7 +5,7 @@ import { createCommande } from '../services/menu.service';
 import { verifierCodePromo } from '../services/codePromo.service';
 import type { ModeRecuperation } from '../types/admin.types';
 import type { CartItem } from '../types/cart.types';
-import { calculerTtc, totalLigneTtc, formatPrix } from '../utils/pricing';
+import { calculerTtc, totalLigne, totalPanierTtc, formatPrix } from '../utils/pricing';
 import { DELAI_MINIMUM_MINUTES } from '../utils/commande.config';
 import {
   getCreneauxPourJour,
@@ -23,15 +23,6 @@ const inputClass =
 /** Prix TTC unitaire, quel que soit le type de ligne */
 const prixUnitaireTtc = (item: CartItem): number =>
   item.kind === 'formule' ? item.prixTtc : calculerTtc(item.prixHt, item.tauxTva);
-
-/** Total TTC d'une ligne */
-const totalLigne = (item: CartItem): number =>
-  item.kind === 'formule'
-    ? (item.prixTtc * item.quantite) 
-    + item.empanadasChoisies.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0) * item.quantite
-    + item.extrasChoisis.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0) * item.quantite 
-    + item.boissonsChoisies.reduce((sum, b) => sum + (b.supplementFormuleTtc || 0), 0) * item.quantite 
-    : totalLigneTtc(item.prixHt, item.tauxTva, item.quantite);
 
 function PanierPage() {
   const { items, setQuantite, remove } = useCart();
@@ -80,15 +71,7 @@ function PanierPage() {
   };
 
   // Estimation d'affichage uniquement : le serveur recalcule le montant réel
-  const totalAvecSupplements = items.reduce((s, i) => {
-    if (i.kind === 'formule') {
-      const supplementTotal = i.empanadasChoisies.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0)
-        + i.extrasChoisis.reduce((sum, e) => sum + (e.supplementFormuleTtc || 0), 0)
-        + i.boissonsChoisies.reduce((sum, b) => sum + (b.supplementFormuleTtc || 0), 0);
-      return s + (i.prixTtc + supplementTotal) * i.quantite;
-    }
-    return s;
-  }, 0);
+  const totalAvecSupplements = totalPanierTtc(items);
 
   const remiseEstimee = promoAppliquee
     ? Math.round(totalAvecSupplements * promoAppliquee.pourcentage) / 100

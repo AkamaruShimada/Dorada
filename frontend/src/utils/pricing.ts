@@ -23,10 +23,16 @@ export const formatPrix = (n: number): string =>
 
 
 export function totalLigne(item: CartItem): number {
-  if (item.kind === 'formule') {
-    return arrondir(item.prixTtc * item.quantite);
+  if (item.kind !== 'formule') {
+    return totalLigneTtc(item.prixHt, item.tauxTva, item.quantite);
   }
-  return totalLigneTtc(item.prixHt, item.tauxTva, item.quantite);
+  const supplementsUnitaires = [
+    ...item.empanadasChoisies,
+    ...item.extrasChoisis,
+    ...item.boissonsChoisies,
+  ].reduce((total, choix) => total + (choix.supplementFormuleTtc || 0), 0)
+
+  return arrondir((item.prixTtc + supplementsUnitaires) * item.quantite);
 }
 
 export function totalPanierTtc(items: CartItem[]): number {

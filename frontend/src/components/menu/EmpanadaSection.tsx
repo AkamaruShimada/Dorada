@@ -1,10 +1,15 @@
-import type { Empanada } from '../../types/admin.types';
+import type { Empanada, TypeEmpanada } from '../../types/admin.types';
 import { calculerTtc } from '../../utils/pricing';
 import { stockRestant, type Reservations } from '../../utils/stock';
-import ProductCard from '../menu/ProductCard';
+import EmpanadaCard from './EmpanadaCard';
 
-type EmpanadaSectionProps = {
-  typeLabel: string;
+const labels: Record<TypeEmpanada, string> = { 
+  SALEE: 'Salées',
+  SUCREE: 'Sucrées', 
+  VEGETARIEN: 'Végétariennes' 
+};
+
+type Props = {
   empanadas: Empanada[];
   reservations: Reservations;
   quantiteDansPanier: (id: number) => number;
@@ -12,40 +17,47 @@ type EmpanadaSectionProps = {
 };
 
 function EmpanadaSection({
-  typeLabel,
   empanadas,
   reservations,
   quantiteDansPanier,
   onAdd,
-}: EmpanadaSectionProps) {
-  if (empanadas.length === 0) return null;
+}: Props) {
+
+  const types: TypeEmpanada[] = ['SALEE', 'SUCREE', 'VEGETARIEN'];
+  const groupes = types.map((type) => ({
+    type,
+    produits: empanadas.filter((e) => e.type === type),
+  })).filter((g) => g.produits.length > 0);
+
+  if (!groupes.length) return null;
 
   return (
-    <section aria-label={`Empanadas ${typeLabel.toLowerCase()}`}>
-      <h2 className="mb-4 text-xl font-bold">
-        Empanadas {typeLabel.toLowerCase()}
-      </h2>
-
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {empanadas.map((empanada) => (
-          <ProductCard
-            key={empanada.id}
-            nom={empanada.nom}
-            description={empanada.description}
-            prixTtc={calculerTtc(empanada.prixHt, empanada.tauxTva)}
-            imageUrl={
-              empanada.image_url ||
-              'https://placehold.co/800x600?text=Empanada'
-            }
-            actif={empanada.actif}
-            stock={stockRestant(empanada, 'empanadas', reservations)}
-            badge={empanada.sansGluten ? 'Sans gluten' : undefined}
-            quantiteDansPanier={quantiteDansPanier(empanada.id)}
-            onAdd={() => onAdd(empanada)}
-          />
-        ))}
-      </div>
+    <section aria-labelledby="section-empanadas" className="space-y-10">
+      <h2 id="section-empanadas" className="title-ornament text-3xl md:text-4xl">Nos empanadas</h2>
+    
+      {groupes.map(({ type, produits }) => 
+        <div key={type} aria-label={labels[type]}>
+          <div className="mb-3 flex items-center gap-4">
+            <h3 className="font-serif text-xl font-semibold uppercase tracking-[.14em] text-primary">{labels[type]}</h3>
+            <span className="h-px flex-1 bg-secondary/45" />
+          </div>
+          <div className="grid grid-cols-1 gap-x-5 md:grid-cols-3 md:gap-x-8 lg:grid-cols-6">
+            {produits.map((empanada) => 
+              <EmpanadaCard 
+                key={empanada.id} 
+                empanada={empanada} 
+                prixTtc={calculerTtc(empanada.prixHt, empanada.tauxTva)} 
+                restant={stockRestant(empanada, 'empanadas', reservations)} 
+                quantiteDansPanier={quantiteDansPanier(empanada.id)} 
+                onAdd={onAdd} 
+              />
+            )}
+          </div>
+        </div>
+      )}
+  
     </section>
+
   );
 }
 

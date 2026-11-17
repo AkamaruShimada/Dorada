@@ -1,9 +1,8 @@
 import type { Boisson } from '../../types/admin.types';
-import { calculerTtc } from '../../utils/pricing';
+import { calculerTtc, formatPrix } from '../../utils/pricing';
 import { stockRestant, type Reservations } from '../../utils/stock';
-import ProductCard from '../menu/ProductCard';
 
-type BoissonSectionProps = {
+type Props = {
   boissons: Boisson[];
   reservations: Reservations;
   quantiteDansPanier: (id: number) => number;
@@ -15,35 +14,42 @@ function BoissonSection({
   reservations,
   quantiteDansPanier,
   onAdd,
-}: BoissonSectionProps) {
+}: Props) {
   if (boissons.length === 0) return null;
 
   return (
     <section aria-labelledby="section-boissons">
-      <h2 id="section-boissons" className="mb-4 text-xl font-bold">
+      <h2 id="section-boissons" className="mb-5 font-serif text-2xl font-semibold uppercase tracking-widest">
         Boissons
       </h2>
-
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {boissons.map((boisson) => (
-          <ProductCard
-            key={boisson.id}
-            nom={boisson.nom}
-            description={boisson.description}
-            prixTtc={calculerTtc(boisson.prixHt, boisson.tauxTva)}
-            imageUrl={
-              boisson.image_url || 'https://placehold.co/800x600?text=Boisson'
-            }
-            actif={boisson.actif}
-            stock={stockRestant(boisson, 'boissons', reservations)}
-            badge={boisson.alcool ? 'Alcoolisée' : undefined}
-            quantiteDansPanier={quantiteDansPanier(boisson.id)}
-            onAdd={() => onAdd(boisson)}
-          />
-        ))}
-      </div>
+      <ul className="divide-y divide-primary/15">
+        {boissons.map((boisson) => { 
+          const restant = stockRestant(boisson, 'boissons', reservations); 
+          const off = !boisson.actif || restant <= 0; 
+          
+          return (
+            <li key={boisson.id} className="flex items-center gap-3 py-3 first:pt-0">
+              <img src={boisson.image_url || 'https://placehold.co/160x160?text=Boisson'} alt="" className="h-14 w-14 rounded-full border border-secondary/50 object-cover"/>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-serif text-lg font-semibold">{boisson.nom}</h3>
+                <p className="text-xs leading-5 text-primary/65">{boisson.description}</p>
+              </div>
+              <span className="text-sm font-semibold tabular-nums">{formatPrix(calculerTtc(boisson.prixHt, boisson.tauxTva))}</span>
+              <button 
+                className="rounded-full border border-secondary px-2.5 py-1 text-secondary hover:bg-secondary hover:text-primary disabled:opacity-35"
+                type="button" 
+                disabled={off} 
+                onClick={() => onAdd(boisson)} 
+                aria-label={`Ajouter ${boisson.nom} au panier`}
+              >
+                {quantiteDansPanier(boisson.id) ? `+${quantiteDansPanier(boisson.id)}` : '+'}
+              </button>
+            </li>
+          )})
+        }
+      </ul>
     </section>
-  );
+  ) 
 }
 
 export default BoissonSection;

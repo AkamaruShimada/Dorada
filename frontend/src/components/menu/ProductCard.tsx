@@ -1,16 +1,17 @@
 // frontend/src/components/menu/ProductCard.tsx
 
+import { formatPrix } from '../../utils/pricing';
 
-type ProductCardProps = {
-  nom: string;
-  description: string;
-  prixTtc: number;
-  imageUrl: string;
-  actif: boolean;
-  stock: number;
-  badge?: string;
-  quantiteDansPanier: number;
-  onAdd: () => void;
+type Props={
+  nom:string;
+  description:string;
+  prixTtc:number;
+  imageUrl:string;
+  actif:boolean;
+  stock:number;
+  badge?:string;
+  quantiteDansPanier:number;
+  onAdd:()=>void
 };
 
 function ProductCard({
@@ -22,41 +23,25 @@ function ProductCard({
   stock,
   badge,
   quantiteDansPanier,
-  onAdd,
-}: ProductCardProps) {
-  const indisponible = !actif || stock <= 0;
-  const stockAtteint = stock <= 0;
-
+  onAdd
+}:Props){
+  const off = !actif || stock <= 0;
   return (
-    <article className="flex flex-col overflow-hidden rounded-xl border border-primary/10 bg-surface shadow-sm">
-      <div className="relative aspect-[4/3] bg-primary/5">
-        <img src={imageUrl} alt={nom} className="h-full w-full object-cover" />
-        {badge && (
-          <span className="absolute left-2 top-2 rounded-full bg-surface px-2.5 py-0.5 text-xs font-semibold text-primary shadow">
-            {badge}
-          </span>
-        )}
-        {indisponible && (
-          <span className="absolute inset-0 flex items-center justify-center bg-surface/70 font-semibold">
-            Indisponible
-          </span>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="font-bold">{nom}</h3>
-        <p className="line-clamp-2 text-sm opacity-70">{description}</p>
-
-        <div className="mt-auto flex items-center justify-between pt-3">
-          <span className="font-semibold tabular-nums">{prixTtc.toFixed(2)} €</span>
-
-          <button
-            type="button"
-            onClick={onAdd}
-            disabled={indisponible || stockAtteint}
-            className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-surface transition hover:opacity-90 disabled:opacity-40"
+    <article className="overflow-hidden rounded border border-secondary/20 bg-cream">
+      <img src={imageUrl} alt="" className="h-40 w-full object-cover"/>
+      <div className="p-4">
+        <h3 className="font-serif text-xl">{nom}</h3>
+        <p className="mt-1 text-sm text-primary/65">{description}</p>
+        {badge && <p className="mt-2 text-xs text-secondary">{badge}</p>}
+        <div className="mt-4 flex items-center justify-between">
+          <span className="font-semibold">{formatPrix(prixTtc)}</span>
+          <button 
+            type="button" 
+            onClick={onAdd} 
+            disabled={off} 
+            className="bg-primary px-3 py-2 text-sm text-cream disabled:opacity-40"
           >
-            {quantiteDansPanier > 0 ? `Ajouté (${quantiteDansPanier})` : 'Ajouter'}
+            {off ? 'Indisponible' : quantiteDansPanier ? `+${quantiteDansPanier}` : 'Ajouter'}
           </button>
         </div>
       </div>
