@@ -11,6 +11,7 @@ import commandeRoutes from './routes/commande.routes'
 import authRoutes from './routes/auth.routes';
 import codePromoRoutes from './routes/codePromo.routes'
 import rapportRoutes from './routes/rapport.routes';
+import contactRoutes from './routes/contact.routes'
 
 import cookieParser from 'cookie-parser';
 import { stripeWebhookHandler } from './controllers/stripe.controller';
@@ -51,6 +52,8 @@ app.use('/api/commandes', commandeRoutes)
 app.use('/api/codes-promo', codePromoRoutes);
 
 app.use('/api/rapports', rapportRoutes);
+
+app.use('/api/contact', contactRoutes)
 
 // Utilise l'authentification et la gestion des utilisateurs
 app.use('/api/auth', authRoutes);

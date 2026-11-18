@@ -9,6 +9,13 @@
   --color-cream: #f6f0e7;
   --font-serif: "Cormorant Garamond", Georgia, serif;
   --font-sans: "DM Sans", sans-serif;
+
+  --animate-bubble-in: bubble-in 0.25s ease-out;
+
+  @keyframes bubble-in {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
 }
 
 @utility scrollbar-brand {

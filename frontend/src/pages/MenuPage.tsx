@@ -9,6 +9,7 @@ import useCleanCart from '../hooks/useCleanCart';
 
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import CartBubble from '../components/layout/CartBubble.tsx';
 
 import PageBanner from '../components/sections/PageBanner';
 import TraiteurBanner from '../components/sections/TraiteurBanner';
@@ -141,6 +142,7 @@ function MenuPage() {
       </main>
     
       <Footer />
+      <CartBubble/>
     </>
   );
 }

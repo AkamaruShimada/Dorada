@@ -3,6 +3,7 @@
 import { Resend } from 'resend';
 import { emailInfo } from '../utils/emailInfo';
 import { templateConfirmationCommande, type DonneesCommande } from '../templates/confirmationCommande';
+import { templateContactMessage, type DonneesContact } from '../templates/contactMessage';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -12,9 +13,21 @@ export async function envoyerConfirmationCommande(
 ) {
   const { error } = await resend.emails.send({
     from: emailInfo.from,
-    to: destinataire + ', ' + emailInfo.contact,
+    to: destinataire,
+    cc: emailInfo.contact,
     subject: `Confirmation de commande ${donnees.reference}`,
     html: templateConfirmationCommande(donnees),
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function envoyerMessageContact(donnees: DonneesContact): Promise<void> {
+  const { error } = await resend.emails.send({
+    from: emailInfo.from,
+    to: emailInfo.contact,
+    replyTo: donnees.email,
+    subject: donnees.sujet,
+    html: templateContactMessage(donnees),
   });
   if (error) throw new Error(error.message);
 }

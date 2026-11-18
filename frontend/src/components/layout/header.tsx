@@ -20,11 +20,11 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-secondary/20 bg-primary text-cream">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
-
-        <NavLink 
+        
+        <NavLink
           to="/" 
           aria-label="Les Farcis, accueil">
-            <img src="https://res.cloudinary.com/b9qac4kt/image/upload/v1794929019/logo_lesfarcis.svg" alt="Les Farcis" className="h-14 w-auto" />
+            <img hidden src="https://res.cloudinary.com/b9qac4kt/image/upload/v1794929019/logo_lesfarcis.svg" alt="Les Farcis" className="h-14 w-auto" />
         </NavLink>
         
         <nav aria-label="Navigation principale" className="hidden items-center gap-8 md:flex">
@@ -72,7 +72,6 @@ function Header() {
               className={navClass}>{l.label}
             </NavLink>)}
           <div className="mt-2 flex items-center gap-5">
-            <CartLink count={nombreArticles}/>
             <NavLink 
               to="/menu" 
               onClick={() => setOpen(false)} 

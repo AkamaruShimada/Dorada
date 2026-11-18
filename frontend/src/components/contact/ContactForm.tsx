@@ -1,21 +1,20 @@
 // frontend/src/components/contact/ContactForm.tsx
 
 import { useState, type FormEvent } from 'react';
+import { ApiError } from '../../services/api.service';
+import { envoyerMessageContact } from '../../services/email.service';
 
 export interface ContactFormValues {
   nom: string;
   email: string;
   sujet: string;
   message: string;
+  website: string;
 }
 
-interface ContactFormProps {
-  onSubmit: (values: ContactFormValues) => Promise<void>;
-}
+const VIDE: ContactFormValues = { nom: '', email: '', sujet: '', message: '', website: '' };
 
-const VIDE: ContactFormValues = { nom: '', email: '', sujet: '', message: '' };
-
-function ContactForm({ onSubmit }: ContactFormProps) {
+function ContactForm() {
   const [values, setValues] = useState<ContactFormValues>(VIDE);
   const [isSending, setIsSending] = useState(false);
   const [succes, setSucces] = useState(false);
@@ -31,11 +30,19 @@ function ContactForm({ onSubmit }: ContactFormProps) {
     setSucces(false);
     setIsSending(true);
     try {
-      await onSubmit(values);
+      await envoyerMessageContact({
+        name: values.nom,
+        email: values.email,
+        message: values.message,
+        sujet: values.sujet,
+        website: values.website,
+      });
       setValues(VIDE);
       setSucces(true);
-    } catch {
-      setErreur("Impossible d'envoyer votre message. Réessayez plus tard.");
+    } catch (error: unknown) {
+      setErreur(error instanceof ApiError
+        ? error.message
+        : "Impossible d'envoyer votre message. Réessayez plus tard.");
     } finally {
       setIsSending(false);
     }
